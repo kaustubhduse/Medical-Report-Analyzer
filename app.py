@@ -249,12 +249,24 @@ def main():
                                 summary = summarize_text(text)
                                 if summary:
                                     parsed = parse_llm_summary(summary)
-                                    historical_data.append(parsed)
+                                    report_date = pdf.name
+                                    for item in parsed:
+                                        item["date"] = report_date
+                                    historical_data.extend(parsed)
                         return historical_data
 
                     historical_data = process_multiple_reports(pdf_docs)
-                    show_trend_analysis(historical_data)
-        
+                    if historical_data:
+                        # Convert to DataFrame
+                        historical_df = pd.DataFrame(historical_data)
+                        
+                        # Ensure 'date' is treated as a column
+                        if "date" not in historical_df.columns:
+                            st.error("❌ No 'date' column found in historical data. Cannot plot trends.")
+                        else:
+                            metrics = [col for col in historical_df.columns if col not in ["date", "unit", "reference_range", "status"]]
+                            show_trend_analysis(historical_df, metrics)
+
                 
                 display_metric_summary(parsed_data)
                 predict_conditions(parsed_data)
