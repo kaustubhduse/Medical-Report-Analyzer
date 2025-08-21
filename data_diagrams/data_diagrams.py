@@ -83,7 +83,7 @@ def generate_radial_health_score(metrics_df):
     )
     st.plotly_chart(fig, use_container_width=True)
 
-# --- THIS FUNCTION IS NOW SIMPLIFIED ---
+# --- THIS FUNCTION IS CORRECTED ---
 def create_clinical_summary_pdf(metrics_df):
     """Generate PDF report with visualizations using Matplotlib for reliability."""
     pdf = FPDF()
@@ -91,6 +91,17 @@ def create_clinical_summary_pdf(metrics_df):
     pdf.set_font("Arial", size=16)
     pdf.cell(200, 10, txt="Clinical Report Summary", ln=True, align='C')
     pdf.set_font("Arial", size=12)
+
+    # --- Data Cleaning and Validation ---
+    # This ensures the dataframe is clean before any processing
+    if not metrics_df.empty:
+        # Ensure 'value' is numeric, converting any errors to NaN, then fill with 0
+        metrics_df['value'] = pd.to_numeric(metrics_df['value'], errors='coerce').fillna(0)
+        # Ensure 'status' is a string and fill any missing values
+        metrics_df['status'] = metrics_df['status'].astype(str).fillna('Unknown')
+        # Ensure 'metric' is a string
+        metrics_df['metric'] = metrics_df['metric'].astype(str)
+
 
     # Add table of metrics
     if not metrics_df.empty:
@@ -110,15 +121,17 @@ def create_clinical_summary_pdf(metrics_df):
             pdf.cell(col_widths[3], 10, str(row['status']), border=1, align='C')
             pdf.ln()
     
-    # --- Generate Chart with Matplotlib using the (already clean) data ---
+    # --- Generate Chart with Matplotlib using the cleaned data ---
     if not metrics_df.empty:
         pdf.add_page()
         pdf.set_font("Arial", size=16)
         pdf.cell(200, 10, txt="Metrics Visualization", ln=True, align='C')
         pdf.ln(5)
 
+        # Create a Matplotlib figure
         fig, ax = plt.subplots(figsize=(10, 6))
         
+        # Define colors, including a default for 'Unknown' status
         colors_map = {'Low': '#FF6B6B', 'Normal': '#51CF66', 'High': '#FF922B', 'Unknown': '#808080'}
         bar_colors = [colors_map.get(status, '#808080') for status in metrics_df['status']]
         
@@ -129,10 +142,12 @@ def create_clinical_summary_pdf(metrics_df):
         plt.xticks(rotation=45, ha="right")
         plt.tight_layout()
 
+        # Save the figure to a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
             fig.savefig(tmpfile.name, format="png")
             pdf.image(tmpfile.name, x=10, y=pdf.get_y(), w=190)
         
+        # Clean up the plot to free memory
         plt.close(fig)
 
     return pdf.output(dest='S').encode('latin1')
