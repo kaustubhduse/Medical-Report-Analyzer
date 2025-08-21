@@ -66,7 +66,7 @@ def summarize_text(text, filename):
         )
 
         summary_prompt = (
-             "You are a medical expert assistant. Carefully read and summarize the following medical report. "
+            "You are a medical expert assistant. Carefully read and summarize the following medical report. "
             "Your summary should include:\n"
             "- Patient's name (if available)\n"
             "- Date of the report (if available, in YYYY-MM-DD format)\n"
@@ -206,39 +206,52 @@ def main():
                     for report in all_parsed_data:
                         with st.expander(f"**Analysis for {report['filename']}**"):
                             metrics_df = pd.DataFrame(report['data'])
+                            
+                            # --- THIS IS THE FIX ---
+                            # Clean and validate the DataFrame right after it's created.
                             if not metrics_df.empty:
                                 metrics_df['value'] = pd.to_numeric(metrics_df['value'], errors='coerce').fillna(0)
                                 metrics_df['status'] = metrics_df['status'].astype(str).fillna('Unknown')
+                                metrics_df['metric'] = metrics_df['metric'].astype(str)
+
+                                st.subheader("Key Metrics Overview")
+                                display_metric_summary(report['data'])
+                                predict_conditions(report['data'])
                                 
-                                plot_metric_comparison(metrics_df)
-                                generate_radial_health_score(metrics_df)
+                                st.subheader("Visual Analysis")
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    plot_metric_comparison(metrics_df)
+                                with col2:
+                                    generate_radial_health_score(metrics_df)
+                                
+                                st.subheader("Metrics Reference Table")
                                 display_reference_table(metrics_df)
                                 
+                                # PDF download button
                                 pdf_report = create_clinical_summary_pdf(metrics_df)
                                 st.download_button(
                                     f"📄 Download PDF Report for {report['filename']}",
                                     pdf_report, f"clinical_report_{report['filename']}.pdf", "application/pdf"
                                 )
-                    
-                    # --- THIS IS THE FIX ---
+                                download_metrics(report['data'], report['filename'])
+                            else:
+                                st.warning("No structured metrics were found in this report to generate visuals.")
+
                     # Trend analysis for multiple reports
                     if len(all_parsed_data) > 1:
                         st.header("📈 Trend Analysis")
                         
-                        # 1. Combine all data into a single long-form DataFrame
                         flat_list = [item for report in all_parsed_data for item in report['data']]
                         historical_df_long = pd.DataFrame(flat_list)
                         
-                        # 2. Convert to wide format for the trend analysis function
                         if 'date' in historical_df_long.columns and 'metric' in historical_df_long.columns:
                             historical_df_wide = historical_df_long.pivot_table(
                                 index='date', columns='metric', values='value'
                             ).reset_index()
                             
-                            # 3. Get the list of metrics to plot
                             metrics_to_plot = [col for col in historical_df_wide.columns if col != 'date']
                             
-                            # 4. Call the function with the correct arguments
                             show_trend_analysis(historical_df_wide, metrics_to_plot)
                         else:
                             st.warning("Could not generate trend analysis due to missing date or metric data.")
