@@ -191,11 +191,29 @@ def main():
                         file_name="medical_summary.txt", 
                         mime="text/plain"
                     )
-
+                else:
+                    st.warning("⚠️ Could not generate summary.")
+                    return
+                
                 # Extract health metrics and display
                 parsed_data = parse_llm_summary(summary)
                  # Convert to DataFrame for diagrams
                 metrics_df = pd.DataFrame(parsed_data)
+                
+                # Text chunking + vectorstore + conversation setup
+                text_chunks = get_text_chunks(raw_text)
+                if not text_chunks:
+                    return
+
+                st.session_state.text_chunks = text_chunks
+
+                try:
+                    vectorstore = get_vectorstore(text_chunks)
+                    st.session_state.vectorstore = vectorstore
+                    st.session_state.conversation = get_conversation_chain(vectorstore)
+                    st.success("✅ Processing complete! You can now ask questions.")
+                except ValueError as e:
+                    st.error(f"❌ Error: {e}")
                 
                 # 1. Disease risk prediction
                 predictor = DiseasePredictor()
@@ -211,7 +229,7 @@ def main():
                 comparator = ReportComparator(st.session_state.vectorstore)
                 # Compute embedding for the current report text
                 embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
-                text_embedding = embedding_model.embed_documents(raw_text)
+                text_embedding = embedding_model.embed_documents([raw_text])[0]
                 similar_reports = comparator.find_similar_reports(text_embedding)
                 
                 if similar_reports:
@@ -264,20 +282,7 @@ def main():
                 # Existing CSV download
                 download_metrics(parsed_data)
 
-                # Text chunking + vectorstore + conversation setup
-                text_chunks = get_text_chunks(raw_text)
-                if not text_chunks:
-                    return
-
-                st.session_state.text_chunks = text_chunks
-
-                try:
-                    vectorstore = get_vectorstore(text_chunks)
-                    st.session_state.vectorstore = vectorstore
-                    st.session_state.conversation = get_conversation_chain(vectorstore)
-                    st.success("✅ Processing complete! You can now ask questions.")
-                except ValueError as e:
-                    st.error(f"❌ Error: {e}")
+                
 
 
 

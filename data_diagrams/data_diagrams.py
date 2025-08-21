@@ -81,7 +81,6 @@ def generate_radial_health_score(metrics_df):
 def create_clinical_summary_pdf(metrics_df):
     """Generate PDF report with visualizations"""
     from fpdf import FPDF
-    import plotly.io as pio
     import tempfile
 
     pdf = FPDF()
@@ -108,13 +107,16 @@ def create_clinical_summary_pdf(metrics_df):
     # Add visualization
     fig = plot_metric_comparison(metrics_df, silent=True)
     if fig:
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpfile:
-            pio.write_image(fig, tmpfile.name, format='png', engine='kaleido')
+        img_bytes = fig.to_image(format="png")  # ✅ Works without Chrome
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+            tmpfile.write(img_bytes)
+            tmpfile.flush()
             pdf.image(tmpfile.name, x=10, y=pdf.get_y(), w=180)
 
     # Get PDF content as bytes
     pdf_content = pdf.output(dest='S').encode('latin1')
     return pdf_content
+
 
 
 def display_reference_table(metrics_df):
