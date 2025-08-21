@@ -20,7 +20,8 @@ def plot_metric_comparison(metrics_df, silent=False):
         color_discrete_map={
             'Low': '#FF6B6B',
             'Normal': '#51CF66',
-            'High': '#FF922B'
+            'High': '#FF922B',
+            'Unknown': '#808080' # Added color for unknown status
         },
         labels={'value': 'Value', 'metric': 'Metric'},
         title='Medical Metrics Analysis'
@@ -91,6 +92,17 @@ def create_clinical_summary_pdf(metrics_df):
     pdf.cell(200, 10, txt="Clinical Report Summary", ln=True, align='C')
     pdf.set_font("Arial", size=12)
 
+    # --- Data Cleaning and Validation ---
+    # This ensures the dataframe is clean before any processing
+    if not metrics_df.empty:
+        # Ensure 'value' is numeric, converting any errors to NaN, then fill with 0
+        metrics_df['value'] = pd.to_numeric(metrics_df['value'], errors='coerce').fillna(0)
+        # Ensure 'status' is a string and fill any missing values
+        metrics_df['status'] = metrics_df['status'].astype(str).fillna('Unknown')
+        # Ensure 'metric' is a string
+        metrics_df['metric'] = metrics_df['metric'].astype(str)
+
+
     # Add table of metrics
     if not metrics_df.empty:
         pdf.ln(10)
@@ -109,7 +121,7 @@ def create_clinical_summary_pdf(metrics_df):
             pdf.cell(col_widths[3], 10, str(row['status']), border=1, align='C')
             pdf.ln()
     
-    # --- Generate Chart with Matplotlib instead of Plotly/Kaleido ---
+    # --- Generate Chart with Matplotlib using the cleaned data ---
     if not metrics_df.empty:
         pdf.add_page()
         pdf.set_font("Arial", size=16)
@@ -119,9 +131,8 @@ def create_clinical_summary_pdf(metrics_df):
         # Create a Matplotlib figure
         fig, ax = plt.subplots(figsize=(10, 6))
         
-        # --- THIS IS THE MORE ROBUST FIX ---
-        # Manually create the color list to ensure every bar gets a valid color.
-        colors_map = {'Low': '#FF6B6B', 'Normal': '#51CF66', 'High': '#FF922B'}
+        # Define colors, including a default for 'Unknown' status
+        colors_map = {'Low': '#FF6B6B', 'Normal': '#51CF66', 'High': '#FF922B', 'Unknown': '#808080'}
         bar_colors = [colors_map.get(status, '#808080') for status in metrics_df['status']]
         
         ax.bar(metrics_df['metric'], metrics_df['value'], color=bar_colors)
