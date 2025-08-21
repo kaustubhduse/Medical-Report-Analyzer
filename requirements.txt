@@ -24,5 +24,6 @@ matplotlib
 seaborn
 kaleido 
 cython
+plotly
 
 
