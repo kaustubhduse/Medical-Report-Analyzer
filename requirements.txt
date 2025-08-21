@@ -4,6 +4,7 @@ PyPDF2
 langchain
 langchain-community
 sentence-transformers
+langchain-openai
 openai
 faiss-cpu
 fpdf
