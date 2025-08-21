@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from io import BytesIO
-# --- Import Matplotlib for reliable PDF chart generation ---
 import matplotlib.pyplot as plt
 from fpdf import FPDF
 import tempfile
+
 
 def plot_metric_comparison(metrics_df, silent=False):
     """Interactive bar chart with reference ranges. Returns fig if silent=True."""
@@ -21,7 +21,7 @@ def plot_metric_comparison(metrics_df, silent=False):
             'Low': '#FF6B6B',
             'Normal': '#51CF66',
             'High': '#FF922B',
-            'Unknown': '#808080' # Added color for unknown status
+            'Unknown': '#808080'
         },
         labels={'value': 'Value', 'metric': 'Metric'},
         title='Medical Metrics Analysis'
@@ -34,7 +34,7 @@ def plot_metric_comparison(metrics_df, silent=False):
                 low, high = map(float, row['reference_range'].split('-'))
                 fig.add_shape(
                     type="rect",
-                    x0=idx-0.4, x1=idx+0.4,
+                    x0=idx - 0.4, x1=idx + 0.4,
                     y0=low, y1=high,
                     line=dict(color="RoyalBlue"),
                     fillcolor="LightSkyBlue",
@@ -51,6 +51,7 @@ def plot_metric_comparison(metrics_df, silent=False):
     if not silent:
         st.plotly_chart(fig, use_container_width=True)
     return fig
+
 
 def generate_radial_health_score(metrics_df):
     """Radial chart for quick health assessment"""
@@ -83,7 +84,7 @@ def generate_radial_health_score(metrics_df):
     )
     st.plotly_chart(fig, use_container_width=True)
 
-# --- THIS FUNCTION IS CORRECTED ---
+
 def create_clinical_summary_pdf(metrics_df):
     """Generate PDF report with visualizations using Matplotlib for reliability."""
     pdf = FPDF()
@@ -92,16 +93,12 @@ def create_clinical_summary_pdf(metrics_df):
     pdf.cell(200, 10, txt="Clinical Report Summary", ln=True, align='C')
     pdf.set_font("Arial", size=12)
 
-    # --- Data Cleaning and Validation ---
-    # This ensures the dataframe is clean before any processing
+    # --- Data Cleaning ---
     if not metrics_df.empty:
-        # Ensure 'value' is numeric, converting any errors to NaN, then fill with 0
+        metrics_df = metrics_df.copy()
         metrics_df['value'] = pd.to_numeric(metrics_df['value'], errors='coerce').fillna(0)
-        # Ensure 'status' is a string and fill any missing values
-        metrics_df['status'] = metrics_df['status'].astype(str).fillna('Unknown')
-        # Ensure 'metric' is a string
+        metrics_df['status'] = metrics_df['status'].fillna('Unknown').astype(str)
         metrics_df['metric'] = metrics_df['metric'].astype(str)
-
 
     # Add table of metrics
     if not metrics_df.empty:
@@ -120,37 +117,31 @@ def create_clinical_summary_pdf(metrics_df):
             pdf.cell(col_widths[2], 10, str(row['reference_range']), border=1, align='C')
             pdf.cell(col_widths[3], 10, str(row['status']), border=1, align='C')
             pdf.ln()
-    
-    # --- Generate Chart with Matplotlib using the cleaned data ---
+
+    # --- Chart ---
     if not metrics_df.empty:
         pdf.add_page()
         pdf.set_font("Arial", size=16)
         pdf.cell(200, 10, txt="Metrics Visualization", ln=True, align='C')
         pdf.ln(5)
 
-        # Create a Matplotlib figure
         fig, ax = plt.subplots(figsize=(10, 6))
-        
-        # Define colors, including a default for 'Unknown' status
         colors_map = {'Low': '#FF6B6B', 'Normal': '#51CF66', 'High': '#FF922B', 'Unknown': '#808080'}
         bar_colors = [colors_map.get(status, '#808080') for status in metrics_df['status']]
-        
         ax.bar(metrics_df['metric'], metrics_df['value'], color=bar_colors)
-        
         ax.set_ylabel('Value')
         ax.set_title('Medical Metrics Analysis')
         plt.xticks(rotation=45, ha="right")
         plt.tight_layout()
 
-        # Save the figure to a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
             fig.savefig(tmpfile.name, format="png")
             pdf.image(tmpfile.name, x=10, y=pdf.get_y(), w=190)
-        
-        # Clean up the plot to free memory
+
         plt.close(fig)
 
-    return pdf.output(dest='S').encode('latin1')
+    # ✅ Return bytes safely
+    return pdf.output(dest="S").encode("latin1")
 
 
 def display_reference_table(metrics_df):
@@ -165,11 +156,16 @@ def display_reference_table(metrics_df):
         default=metrics_df['status'].unique()
     )
     filtered_df = metrics_df[metrics_df['status'].isin(status_filter)]
+
+    # Avoid KeyError if 'unit' column missing
+    cols_to_show = [c for c in ['metric', 'value', 'unit', 'reference_range', 'status'] if c in filtered_df.columns]
+
     st.dataframe(
-        filtered_df[['metric', 'value', 'unit', 'reference_range', 'status']],
+        filtered_df[cols_to_show],
         hide_index=True,
         use_container_width=True
     )
+
 
 def plot_historical_trend(historical_data):
     """Line chart for historical metric trends"""
