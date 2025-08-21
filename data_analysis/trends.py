@@ -8,9 +8,19 @@ def plot_metric_trend(historical_df, metric, date_col='date'):
         st.warning(f"Data for '{metric}' or date column '{date_col}' not found.")
         return
 
-    # Ensure the date column is sorted
+    # Ensure the date column is parsed as datetime
+    historical_df[date_col] = pd.to_datetime(historical_df[date_col], errors="coerce")
+
+    # Ensure values are numeric
+    historical_df[metric] = pd.to_numeric(historical_df[metric], errors="coerce")
+
+    # Drop rows with missing values and sort
     df = historical_df[[date_col, metric]].dropna().sort_values(by=date_col)
     
+    if df.empty:
+        st.info(f"No valid data to plot for '{metric}'.")
+        return
+
     fig = px.line(
         df, 
         x=date_col, 
@@ -26,7 +36,14 @@ def detect_anomalies(historical_df, metric, date_col='date', threshold=2.0):
     if metric not in historical_df.columns or date_col not in historical_df.columns:
         return []
 
-    df = historical_df[[date_col, metric]].dropna()
+    # Ensure numeric conversion
+    df = historical_df[[date_col, metric]].dropna().copy()
+    df[metric] = pd.to_numeric(df[metric], errors="coerce")
+    df = df.dropna()  # remove rows where value couldn't be converted
+
+    if df.empty:
+        return []
+
     values = df[metric]
     
     # Check if there's enough data to calculate standard deviation
@@ -44,7 +61,6 @@ def show_trend_analysis(historical_df, metrics, date_col='date'):
     """
     st.subheader("Metric Trends Over Time")
     
-    # --- THIS IS THE FIX ---
     # Ensure the date column exists before proceeding
     if date_col not in historical_df.columns:
         st.error(f"Date column '{date_col}' not found in the historical data. Cannot plot trends.")
@@ -55,5 +71,7 @@ def show_trend_analysis(historical_df, metrics, date_col='date'):
         anomalies = detect_anomalies(historical_df, metric, date_col)
         if anomalies:
             # Format anomalies for better readability
-            formatted_anomalies = [f"{date}: {value:.2f}" for date, value in anomalies]
-            st.warning(f"Potential anomalies detected in **{metric}**: {'; '.join(formatted_anomalies)}")
+            formatted_anomalies = [f"{date.strftime('%Y-%m-%d')}: {value:.2f}" 
+                                   for date, value in anomalies if pd.notna(date)]
+            if formatted_anomalies:
+                st.warning(f"⚠️ Potential anomalies detected in **{metric}**: {'; '.join(formatted_anomalies)}")
