@@ -118,11 +118,12 @@ def create_clinical_summary_pdf(metrics_df):
 
         # Create a Matplotlib figure
         fig, ax = plt.subplots(figsize=(10, 6))
-        colors = {'Low': '#FF6B6B', 'Normal': '#51CF66', 'High': '#FF922B'}
         
-        # --- THIS IS THE FIX ---
-        # Map colors and fill any missing values with gray to prevent crashing
-        bar_colors = metrics_df['status'].map(colors).fillna('#808080') # Default to gray
+        # --- THIS IS THE MORE ROBUST FIX ---
+        # Manually create the color list to ensure every bar gets a valid color.
+        colors_map = {'Low': '#FF6B6B', 'Normal': '#51CF66', 'High': '#FF922B'}
+        bar_colors = [colors_map.get(status, '#808080') for status in metrics_df['status']]
+        
         ax.bar(metrics_df['metric'], metrics_df['value'], color=bar_colors)
         
         ax.set_ylabel('Value')
