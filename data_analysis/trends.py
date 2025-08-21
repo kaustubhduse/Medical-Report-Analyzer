@@ -36,16 +36,21 @@ def detect_anomalies(historical_df, metric, date_col='date', threshold=2.0):
     if metric not in historical_df.columns or date_col not in historical_df.columns:
         return []
 
-    # Ensure numeric conversion
-    df = historical_df[[date_col, metric]].dropna().copy()
+    # Extract relevant columns and force numeric conversion
+    df = historical_df[[date_col, metric]].copy()
+
+    # Convert metric column to numeric, coerce errors to NaN
     df[metric] = pd.to_numeric(df[metric], errors="coerce")
-    df = df.dropna()  # remove rows where value couldn't be converted
+
+    # Drop rows with invalid date or metric
+    df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+    df = df.dropna(subset=[date_col, metric])
 
     if df.empty:
         return []
 
-    values = df[metric]
-    
+    values = df[metric].astype(float)  # ✅ ensure float dtype
+
     # Check if there's enough data to calculate standard deviation
     if len(values) < 2 or values.std() == 0:
         return []
@@ -53,6 +58,7 @@ def detect_anomalies(historical_df, metric, date_col='date', threshold=2.0):
     mean, std = values.mean(), values.std()
     anomalies = df[abs(values - mean) > threshold * std]
     return list(anomalies.itertuples(index=False, name=None))
+
 
 def show_trend_analysis(historical_df, metrics, date_col='date'):
     """
