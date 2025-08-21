@@ -259,15 +259,11 @@ def main():
                     if historical_data:
                         # Convert to DataFrame
                         historical_df = pd.DataFrame(historical_data)
-                        for col in historical_df.columns:
-                            if col not in ["date", "unit", "reference_range", "status", "metric"]:
-                                historical_df[col] = pd.to_numeric(historical_df[col], errors="coerce")
-                        # Ensure 'date' is treated as a column
-                        if "date" not in historical_df.columns:
-                            st.error("❌ No 'date' column found in historical data. Cannot plot trends.")
-                        else:
-                            metrics = [col for col in historical_df.columns if col not in ["date", "unit", "reference_range", "status"]]
-                            show_trend_analysis(historical_df, metrics)
+                        # Force numeric conversion for the "value" column if it exists
+                        if "value" in historical_df.columns:
+                            historical_df["value"] = pd.to_numeric(historical_df["value"], errors="coerce")    
+                        if "date" in historical_df.columns:
+                            historical_df["date"] = historical_df["date"].astype(str)
 
                 
                 display_metric_summary(parsed_data)
