@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from io import BytesIO
+# --- Import Matplotlib for reliable PDF chart generation ---
+import matplotlib.pyplot as plt
+from fpdf import FPDF
+import tempfile
 
 def plot_metric_comparison(metrics_df, silent=False):
     """Interactive bar chart with reference ranges. Returns fig if silent=True."""
@@ -78,45 +82,60 @@ def generate_radial_health_score(metrics_df):
     )
     st.plotly_chart(fig, use_container_width=True)
 
+# --- THIS FUNCTION IS CORRECTED ---
 def create_clinical_summary_pdf(metrics_df):
-    """Generate PDF report with visualizations"""
-    from fpdf import FPDF
-    import tempfile
-
+    """Generate PDF report with visualizations using Matplotlib for reliability."""
     pdf = FPDF()
     pdf.add_page()
+    pdf.set_font("Arial", size=16)
+    pdf.cell(200, 10, txt="Clinical Report Summary", ln=True, align='C')
     pdf.set_font("Arial", size=12)
 
-    # Add table
-    cols = ["Metric", "Value", "Reference", "Status"]
-    pdf.cell(200, 10, txt="Clinical Report Summary", ln=1, align='C')
-
-    # Create table
-    col_widths = [45, 35, 60, 40]
-    for col, width in zip(cols, col_widths):
-        pdf.cell(width, 10, txt=col, border=1)
-    pdf.ln()
-
-    for _, row in metrics_df.iterrows():
-        pdf.cell(col_widths[0], 10, txt=str(row['metric']), border=1)
-        pdf.cell(col_widths[1], 10, txt=str(row['value']), border=1)
-        pdf.cell(col_widths[2], 10, txt=str(row['reference_range']), border=1)
-        pdf.cell(col_widths[3], 10, txt=str(row['status']), border=1)
+    # Add table of metrics
+    if not metrics_df.empty:
+        pdf.ln(10)
+        pdf.set_font("Arial", 'B', 10)
+        col_widths = [50, 30, 50, 40]
+        headers = ["Metric", "Value", "Reference Range", "Status"]
+        for header, width in zip(headers, col_widths):
+            pdf.cell(width, 10, header, border=1, align='C')
         pdf.ln()
 
-    # Add visualization
-    fig = plot_metric_comparison(metrics_df, silent=True)
-    if fig:
-        img_bytes = fig.to_image(format="png")  # ✅ Works without Chrome
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
-            tmpfile.write(img_bytes)
-            tmpfile.flush()
-            pdf.image(tmpfile.name, x=10, y=pdf.get_y(), w=180)
+        pdf.set_font("Arial", '', 10)
+        for _, row in metrics_df.iterrows():
+            pdf.cell(col_widths[0], 10, str(row['metric']), border=1)
+            pdf.cell(col_widths[1], 10, str(row['value']), border=1, align='C')
+            pdf.cell(col_widths[2], 10, str(row['reference_range']), border=1, align='C')
+            pdf.cell(col_widths[3], 10, str(row['status']), border=1, align='C')
+            pdf.ln()
+    
+    # --- Generate Chart with Matplotlib instead of Plotly/Kaleido ---
+    if not metrics_df.empty:
+        pdf.add_page()
+        pdf.set_font("Arial", size=16)
+        pdf.cell(200, 10, txt="Metrics Visualization", ln=True, align='C')
+        pdf.ln(5)
 
-    # Get PDF content as bytes
-    pdf_content = pdf.output(dest='S').encode('latin1')
-    return pdf_content
+        # Create a Matplotlib figure
+        fig, ax = plt.subplots(figsize=(10, 6))
+        colors = {'Low': '#FF6B6B', 'Normal': '#51CF66', 'High': '#FF922B'}
+        
+        ax.bar(metrics_df['metric'], metrics_df['value'], color=metrics_df['status'].map(colors))
+        
+        ax.set_ylabel('Value')
+        ax.set_title('Medical Metrics Analysis')
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
 
+        # Save the figure to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+            fig.savefig(tmpfile.name, format="png")
+            pdf.image(tmpfile.name, x=10, y=pdf.get_y(), w=190)
+        
+        # Clean up the plot to free memory
+        plt.close(fig)
+
+    return pdf.output(dest='S').encode('latin1')
 
 
 def display_reference_table(metrics_df):
