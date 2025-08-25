@@ -1,4 +1,4 @@
-# -- Core App & LLM Dependencies --
+# Core dependencies
 streamlit
 python-dotenv
 od-parse @ git+https://github.com/octondata/od-parse.git
@@ -8,16 +8,23 @@ langchain-openai
 openai
 sentence-transformers
 faiss-cpu
-torch      # CPU version
-torchvision  # CPU version
-opencv-python-headless   # Required by od-parse
+torch>=2.0.0+cpu
+torchvision>=0.15.0+cpu
+opencv-python-headless
 
-# -- Data Analysis & Plotting --
+# Advanced PDF parsing
+detectron2 @ https://dl.fbaipublicfiles.com/detectron2/wheels/cu118/torch2.1/detectron2-0.6%2Bcpu-cp311-cp311-linux_x86_64.whl
+transformers>=4.30.0
+scikit-learn>=1.3.0
+scipy>=1.10.0
+aiofiles>=23.0.0
+spacy>=3.6.0
+langdetect>=1.0.9
+
+# Data & plotting
 fpdf
 prophet
 numpy
-scipy
-scikit-learn
 pandas
 plotly
 kaleido
@@ -25,18 +32,7 @@ matplotlib
 seaborn
 jpype1
 
-# -- Text & Language Processing --
-spacy>=3.6.0
-langdetect>=1.0.9
-polyglot>=16.7.4
-googletrans>=4.0.0
-
-# -- Async & caching --
-aiofiles>=23.0.0
-redis>=4.5.0
-joblib>=1.3.0
-
-# -- Markdown & logging --
+# Markdown & logging
 rich>=14.1.0
 markdown-it-py>=4.0.0
 pygments>=2.13.0
