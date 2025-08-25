@@ -1,5 +1,6 @@
 streamlit
 python-dotenv
+od-parse @ git+https://github.com/octondata/od-parse.git
 PyPDF2
 langchain
 langchain-community
@@ -17,3 +18,11 @@ plotly
 kaleido
 matplotlib
 seaborn
+
+# PyTorch (choose version based on your system, example for CUDA 11.8)
+torch==2.1.0+cu118 -f https://download.pytorch.org/whl/torch_stable.html
+torchvision==0.16.0+cu118 -f https://download.pytorch.org/whl/torch_stable.html
+
+# Detectron2 (must match torch/CUDA)
+-f https://dl.fbaipublicfiles.com/detectron2/wheels/cu118/torch2.1/index.html
+detectron2

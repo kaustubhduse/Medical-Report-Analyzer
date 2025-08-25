@@ -1,7 +1,11 @@
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
-from PyPDF2 import PdfReader
+import os
+import tempfile  # Added for temporary file handling
+
+# --- Replaced PyPDF2 with od-parse ---
+from od_parse import parse_pdf, convert_to_markdown
 
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -10,15 +14,12 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 
-
-import os
 from data_analysis.data_analysis import (
     parse_llm_summary,
     display_metric_summary,
     predict_conditions,
     download_metrics
 )
-
 from data_diagrams.data_diagrams import (
     plot_metric_comparison,
     generate_radial_health_score,
@@ -33,18 +34,43 @@ from data_analysis.trends import show_trend_analysis, detect_anomalies
 load_dotenv()
 
 
+# --- MODIFIED FUNCTION ---
 def get_pdf_text(pdf_docs):
-    text = ""
+    """
+    Parses uploaded PDF documents using od-parse and returns their content
+    as a single Markdown formatted string.
+    """
+    full_text = ""
     for pdf in pdf_docs:
-        pdf_reader = PdfReader(pdf)
-        for page in pdf_reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-    if not text.strip():
-        st.error("⚠️ No readable text found in uploaded PDFs! Please ensure they contain selectable text.")
+        # od-parse needs a file path, so we save the uploaded file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            tmp_file.write(pdf.getvalue())
+            tmp_file_path = tmp_file.name
+
+        try:
+            # Step 1: Parse the PDF file using od-parse
+            parsed_data = parse_pdf(tmp_file_path)
+
+            # Step 2: Convert the parsed data to a Markdown string
+            # This is better than plain text as it preserves tables and structure
+            markdown_text = convert_to_markdown(
+                parsed_data,
+                include_images=False,  # Exclude images for the text-based LLM
+                include_tables=True,
+                include_forms=True,
+                include_handwritten=True
+            )
+            full_text += markdown_text + "\n\n---\n\n"  # Add separator between docs
+        except Exception as e:
+            st.error(f"⚠️ Error parsing {pdf.name} with od-parse: {e}")
+        finally:
+            # Clean up the temporary file
+            os.remove(tmp_file_path)
+
+    if not full_text.strip():
+        st.error("⚠️ No readable text found in uploaded PDFs! od-parse could not extract content.")
         return None
-    return text
+    return full_text
 
 
 def summarize_text(text):
@@ -61,7 +87,7 @@ def summarize_text(text):
         )
 
         summary_prompt = (
-            "You are a medical expert assistant. Carefully read and summarize the following medical report. "
+            "You are a medical expert assistant. Carefully read and summarize the following medical report, which is in Markdown format. "
             "Your summary should include:\n"
             "- Patient's name (if available)\n"
             "- Date of the report (if available)\n"
@@ -70,11 +96,11 @@ def summarize_text(text):
             "- Diagnoses or impressions (if mentioned)\n"
             "- Recommendations for further tests, treatments, or follow-up (in bullet points)\n"
             "\n"
-            "Extract medical metrics as JSON array with the following fields:\n"
+            "Extract medical metrics as a JSON array with the following fields:\n"
             "- metric: Test name\n"
             "- value: Numeric result\n"
             "- reference_range: X-Y format\n"
-            "-unit: Measurement unit \n"
+            "- unit: Measurement unit\n"
             "Return metrics only in JSON format and other information in plain text.\n"
             f"{text}"
         )
@@ -108,7 +134,7 @@ def get_vectorstore(text_chunks):
     embeddings = HuggingFaceEmbeddings(model_name=model_name)
 
     vectorstore = FAISS.from_texts(
-        texts=text_chunks, 
+        texts=text_chunks,
         embedding=embeddings,
         metadatas=[{}]*len(text_chunks))
     return vectorstore
@@ -186,20 +212,20 @@ def main():
                 if summary:
                     st.session_state.summary = summary
                     st.download_button(
-                        "📥 Download Medical Summary", 
-                        summary.encode('utf-8'), 
-                        file_name="medical_summary.txt", 
+                        "📥 Download Medical Summary",
+                        summary.encode('utf-8'),
+                        file_name="medical_summary.txt",
                         mime="text/plain"
                     )
                 else:
                     st.warning("⚠️ Could not generate summary.")
                     return
-                
+
                 # Extract health metrics and display
                 parsed_data = parse_llm_summary(summary)
-                 # Convert to DataFrame for diagrams
+                # Convert to DataFrame for diagrams
                 metrics_df = pd.DataFrame(parsed_data)
-                
+
                 # Text chunking + vectorstore + conversation setup
                 text_chunks = get_text_chunks(raw_text)
                 if not text_chunks:
@@ -214,30 +240,29 @@ def main():
                     st.success("✅ Processing complete! You can now ask questions.")
                 except ValueError as e:
                     st.error(f"❌ Error: {e}")
-                
+
                 # 1. Disease risk prediction
                 predictor = DiseasePredictor()
                 metrics_dict = {item['metric']: item['value'] for item in parsed_data}
                 risk_assessment = predictor.predict_risk(metrics_dict)
-                
+
                 st.subheader("🩺 Disease Risk Assessment")
                 if 'anemia' in risk_assessment:
                     st.progress(risk_assessment['anemia']['probability'])
                     st.markdown(risk_assessment['anemia']['advice'])
-                    
+
                 # 2. Similar Report Detection
                 comparator = ReportComparator(st.session_state.vectorstore)
                 # Compute embedding for the current report text
                 embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
                 text_embedding = embedding_model.embed_documents([raw_text])[0]
                 similar_reports = comparator.find_similar_reports(text_embedding)
-                
+
                 if similar_reports:
                     st.subheader("🔍 Similar Reports Found")
                     for report, similarity in similar_reports:
                         st.write(f"**{similarity:.1%} match**: {report['diagnosis']}")
 
-                
                 # 3. Time Series Analysis
                 if len(pdf_docs) > 1:  # Only show trends if multiple reports
                     # Process multiple reports to extract historical data
@@ -261,14 +286,13 @@ def main():
                         historical_df = pd.DataFrame(historical_data)
                         # Force numeric conversion for the "value" column if it exists
                         if "value" in historical_df.columns:
-                            historical_df["value"] = pd.to_numeric(historical_df["value"], errors="coerce")    
+                            historical_df["value"] = pd.to_numeric(historical_df["value"], errors="coerce")
                         if "date" in historical_df.columns:
                             historical_df["date"] = historical_df["date"].astype(str)
 
-                
                 display_metric_summary(parsed_data)
                 predict_conditions(parsed_data)
-                
+
                 # New visualizations
                 st.subheader("📈 Interactive Visual Analysis")
                 col1, col2 = st.columns(2)
@@ -276,10 +300,10 @@ def main():
                     plot_metric_comparison(metrics_df)
                 with col2:
                     generate_radial_health_score(metrics_df)
-                    
+
                 # Interactive table
                 display_reference_table(metrics_df)
-                
+
                 # PDF Report
                 pdf_report = create_clinical_summary_pdf(metrics_df)
                 st.download_button(
@@ -288,8 +312,9 @@ def main():
                    "clinical_report.pdf",
                    "application/pdf"
                 )
-                
+
                 # Existing CSV download
                 download_metrics(parsed_data)
+
 if __name__ == '__main__':
     main()
