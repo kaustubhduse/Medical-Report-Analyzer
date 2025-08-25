@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
 import os
-import tempfile  # Added for temporary file handling
+import tempfile
 
-# --- Replaced PyPDF2 with od-parse ---
+# Use the main parse_pdf function which can handle different pipelines
 from od_parse import parse_pdf, convert_to_markdown
 
 from langchain.text_splitter import CharacterTextSplitter
@@ -34,13 +34,17 @@ from data_analysis.trends import show_trend_analysis, detect_anomalies
 load_dotenv()
 
 
-# --- MODIFIED FUNCTION ---
-def get_pdf_text(pdf_docs):
+# --- MODIFIED FUNCTION to accept advanced options ---
+def get_pdf_text(pdf_docs, pipeline_type="default", use_deep_learning=False):
     """
-    Parses uploaded PDF documents using od-parse and returns their content
-    as a single Markdown formatted string.
+    Parses uploaded PDF documents using od-parse with user-selected options
+    and returns their content as a single Markdown formatted string.
     """
     full_text = ""
+    st.info(f"Running '{pipeline_type}' pipeline...")
+    if use_deep_learning:
+        st.warning("Deep Learning is enabled. Processing will be slower but more accurate. 🧠")
+
     for pdf in pdf_docs:
         # od-parse needs a file path, so we save the uploaded file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
@@ -48,14 +52,17 @@ def get_pdf_text(pdf_docs):
             tmp_file_path = tmp_file.name
 
         try:
-            # Step 1: Parse the PDF file using od-parse
-            parsed_data = parse_pdf(tmp_file_path)
+            # Step 1: Parse the PDF using od-parse with selected advanced options
+            parsed_data = parse_pdf(
+                file_path=tmp_file_path,
+                pipeline_type=pipeline_type,
+                use_deep_learning=use_deep_learning
+            )
 
             # Step 2: Convert the parsed data to a Markdown string
-            # This is better than plain text as it preserves tables and structure
             markdown_text = convert_to_markdown(
                 parsed_data,
-                include_images=False,  # Exclude images for the text-based LLM
+                include_images=False,
                 include_tables=True,
                 include_forms=True,
                 include_handwritten=True
@@ -104,7 +111,7 @@ def summarize_text(text):
             "Return metrics only in JSON format and other information in plain text.\n"
             f"{text}"
         )
-        summary = llm.predict(summary_prompt)
+        summary = ll.predict(summary_prompt)
         return summary
     except Exception as e:
         st.error(f"❌ Error generating summary: {e}")
@@ -194,20 +201,38 @@ def main():
     with st.sidebar:
         st.subheader("📄 Upload Medical Reports (PDF)")
         pdf_docs = st.file_uploader("Upload PDFs and click 'Process'", accept_multiple_files=True)
+        
+        # --- NEW: Advanced Parsing Options ---
+        st.subheader("⚙️ Parsing Options")
+        
+        pipeline_type = st.selectbox(
+            "Select Parsing Pipeline:",
+            options=["default", "forms", "structure", "full"],
+            help="Choose the type of content to focus on. 'Full' is the most comprehensive."
+        )
+        
+        use_deep_learning = st.checkbox(
+            "Enable Deep Learning",
+            value=False,
+            help="Slower but provides more accurate extraction for tables and forms."
+        )
+        # --- END NEW ---
 
         if st.button("🚀 Process"):
-            with st.spinner("⏳ Processing..."):
+            with st.spinner("⏳ Processing... This may take a moment."):
                 if not pdf_docs:
                     st.error("⚠️ Please upload at least one PDF file!")
                     return
 
-                raw_text = get_pdf_text(pdf_docs)
+                # --- UPDATED to pass options to the parsing function ---
+                raw_text = get_pdf_text(pdf_docs, pipeline_type, use_deep_learning)
+                
                 if not raw_text:
                     return
 
                 st.session_state.pdf_text = raw_text
 
-                # Generate summary but DO NOT display it
+                # Generate summary
                 summary = summarize_text(raw_text)
                 if summary:
                     st.session_state.summary = summary
@@ -223,7 +248,6 @@ def main():
 
                 # Extract health metrics and display
                 parsed_data = parse_llm_summary(summary)
-                # Convert to DataFrame for diagrams
                 metrics_df = pd.DataFrame(parsed_data)
 
                 # Text chunking + vectorstore + conversation setup
@@ -241,7 +265,7 @@ def main():
                 except ValueError as e:
                     st.error(f"❌ Error: {e}")
 
-                # 1. Disease risk prediction
+                # The rest of the app logic remains the same...
                 predictor = DiseasePredictor()
                 metrics_dict = {item['metric']: item['value'] for item in parsed_data}
                 risk_assessment = predictor.predict_risk(metrics_dict)
@@ -251,9 +275,7 @@ def main():
                     st.progress(risk_assessment['anemia']['probability'])
                     st.markdown(risk_assessment['anemia']['advice'])
 
-                # 2. Similar Report Detection
                 comparator = ReportComparator(st.session_state.vectorstore)
-                # Compute embedding for the current report text
                 embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
                 text_embedding = embedding_model.embed_documents([raw_text])[0]
                 similar_reports = comparator.find_similar_reports(text_embedding)
@@ -263,13 +285,11 @@ def main():
                     for report, similarity in similar_reports:
                         st.write(f"**{similarity:.1%} match**: {report['diagnosis']}")
 
-                # 3. Time Series Analysis
-                if len(pdf_docs) > 1:  # Only show trends if multiple reports
-                    # Process multiple reports to extract historical data
+                if len(pdf_docs) > 1:
                     def process_multiple_reports(pdf_docs):
                         historical_data = []
                         for pdf in pdf_docs:
-                            text = get_pdf_text([pdf])
+                            text = get_pdf_text([pdf], pipeline_type, use_deep_learning)
                             if text:
                                 summary = summarize_text(text)
                                 if summary:
@@ -282,9 +302,7 @@ def main():
 
                     historical_data = process_multiple_reports(pdf_docs)
                     if historical_data:
-                        # Convert to DataFrame
                         historical_df = pd.DataFrame(historical_data)
-                        # Force numeric conversion for the "value" column if it exists
                         if "value" in historical_df.columns:
                             historical_df["value"] = pd.to_numeric(historical_df["value"], errors="coerce")
                         if "date" in historical_df.columns:
@@ -293,7 +311,6 @@ def main():
                 display_metric_summary(parsed_data)
                 predict_conditions(parsed_data)
 
-                # New visualizations
                 st.subheader("📈 Interactive Visual Analysis")
                 col1, col2 = st.columns(2)
                 with col1:
@@ -301,10 +318,8 @@ def main():
                 with col2:
                     generate_radial_health_score(metrics_df)
 
-                # Interactive table
                 display_reference_table(metrics_df)
 
-                # PDF Report
                 pdf_report = create_clinical_summary_pdf(metrics_df)
                 st.download_button(
                    "📄 Download Full PDF Report",
@@ -312,8 +327,6 @@ def main():
                    "clinical_report.pdf",
                    "application/pdf"
                 )
-
-                # Existing CSV download
                 download_metrics(parsed_data)
 
 if __name__ == '__main__':
