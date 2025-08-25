@@ -13,3 +13,5 @@ libxss1
 libxtst6
 libasound2
 libgl1-mesa-glx
+poppler-utils
+default-jre
