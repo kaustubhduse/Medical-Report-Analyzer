@@ -14,3 +14,6 @@ libxtst6
 libasound2
 libgl1-mesa-glx
 poppler-utils
+default-jdk
+tesseract-ocr
+

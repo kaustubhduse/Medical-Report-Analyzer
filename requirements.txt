@@ -23,6 +23,7 @@ plotly
 kaleido
 matplotlib
 seaborn
+jpype1
 
 # -- Text & Language Processing --
 spacy>=3.6.0
