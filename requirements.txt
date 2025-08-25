@@ -16,4 +16,4 @@ plotly
 kaleido
 matplotlib
 seaborn
--e git+https://github.com/octondata/od-parse.git#egg=od-parse[trocr,table_transformer,multilingual]
+-e git+https://github.com/octondata/od-parse.git#egg=od-parse
