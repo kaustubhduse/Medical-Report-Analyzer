@@ -16,4 +16,6 @@ libgl1-mesa-glx
 poppler-utils
 default-jre
 tesseract-ocr
-ttf-mscorefonts-installer
+fonts-dejavu
+fonts-liberation
+fonts-freefont-ttf
