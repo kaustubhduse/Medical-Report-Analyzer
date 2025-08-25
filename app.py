@@ -3,9 +3,8 @@ import pandas as pd
 from dotenv import load_dotenv
 import os
 
-# --- New od-parser Imports (Simplified and Corrected) ---
-# We will use the main parse_pdf function and specify the pipeline type.
-# This is more stable than importing the pipeline components directly.
+# --- New od-parser Import ---
+# This replaces PyPDF2 for much better and more advanced PDF parsing.
 from od_parse.main import parse_pdf
 
 # --- Langchain and AI Imports ---
@@ -17,7 +16,6 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 
 # --- Your Custom Project Modules ---
-# Ensure these files exist in your project structure
 from data_analysis.data_analysis import (
     parse_llm_summary,
     display_metric_summary,
@@ -38,37 +36,38 @@ from data_analysis.trends import show_trend_analysis, detect_anomalies
 load_dotenv()
 
 
-# --- New Advanced PDF Processing Function (Updated) ---
+# --- New Advanced PDF Processing Function using od-parser ---
 def process_medical_reports(pdf_docs):
     """
-    Processes uploaded medical reports using the stable, high-level parse_pdf function
-    with the 'full' pipeline to extract all relevant content.
+    Processes uploaded medical reports using od-parser to extract both
+    plain text and structured tables for the highest accuracy.
     """
-    full_text = ""
-    all_tables = []
+    full_text_content = ""
+    all_extracted_tables = []
     temp_file_path = "temp_report.pdf"
 
     for pdf in pdf_docs:
-        # Save the uploaded file to a temporary location for processing
+        # od-parser works with file paths, so we save the uploaded file temporarily
         with open(temp_file_path, "wb") as f:
             f.write(pdf.getvalue())
 
         try:
-            st.info(f"🧠 Analyzing '{pdf.name}' with the 'full' pipeline...")
+            st.info(f"🧠 Analyzing '{pdf.name}' with od-parser...")
             
-            # Use the high-level parse_pdf function instead of building a manual pipeline
+            # Use the main parse_pdf function with the 'full' pipeline
             result = parse_pdf(
                 file_path=temp_file_path,
-                pipeline_type="full",      # Use the comprehensive built-in pipeline
-                use_deep_learning=True     # Enable neural models for best results
+                pipeline_type="full",
+                use_deep_learning=True
             )
 
-            # Separate the text content and tables from the result dictionary
-            if result.get("text_content"):
-                full_text += result.get("text_content") + "\n\n---\n\n"
+            # Extract the text and tables from the result dictionary
+            # The key for text is 'full_text'
+            if result.get("full_text"):
+                full_text_content += result.get("full_text") + "\n\n---\n\n"
             
             if result.get("tables"):
-                all_tables.extend(result.get("tables"))
+                all_extracted_tables.extend(result.get("tables"))
 
         except Exception as e:
             st.error(f"❌ Error processing '{pdf.name}': {e}")
@@ -77,11 +76,11 @@ def process_medical_reports(pdf_docs):
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
 
-    if not full_text and not all_tables:
-        st.error("⚠️ Could not extract any content from the PDFs.")
+    if not full_text_content and not all_extracted_tables:
+        st.error("⚠️ od-parser could not extract any content from the PDFs.")
         return None
 
-    return {"text": full_text, "tables": all_tables}
+    return {"text": full_text_content, "tables": all_extracted_tables}
 
 
 def summarize_text(text):
@@ -101,7 +100,8 @@ def summarize_text(text):
         summary_prompt = (
             "You are a medical expert assistant. Summarize the following medical report text. "
             "Include key findings, diagnoses, and recommendations in bullet points. "
-            "Also, extract medical metrics into a JSON array with 'metric', 'value', 'reference_range', and 'unit' fields. "
+            "If you do not find structured tables in the text, extract medical metrics into a JSON array "
+            "with 'metric', 'value', 'reference_range', and 'unit' fields. "
             f"Here is the report text:\n\n{text}"
         )
         summary = llm.predict(summary_prompt)
@@ -121,7 +121,7 @@ def get_text_chunks(text):
     )
     chunks = text_splitter.split_text(text)
     if not chunks:
-        st.error("⚠️ No valid text chunks found! Ensure PDFs contain readable text.")
+        st.error("⚠️ No valid text chunks found for the chat model.")
         return None
     return chunks
 
@@ -185,11 +185,11 @@ def main():
         if key not in st.session_state:
             st.session_state[key] = None
 
-    st.header("⚕️ Chat with Medical Reports")
+    st.header("⚕️ Medical Report Analyzer")
 
     with st.sidebar:
         st.subheader("📄 Your Medical Documents")
-        pdf_docs = st.file_uploader("Upload your PDF reports and click 'Process'", accept_multiple_files=True)
+        pdf_docs = st.file_uploader("Upload PDF reports and click 'Process'", accept_multiple_files=True)
 
         if st.button("🚀 Process Documents"):
             with st.spinner("Analyzing documents... This may take a moment."):
@@ -197,7 +197,7 @@ def main():
                     st.error("⚠️ Please upload at least one PDF file!")
                     return
 
-                # --- Use the new function to get both text and tables ---
+                # --- Use the new od-parser function to get both text and tables ---
                 processed_data = process_medical_reports(pdf_docs)
                 if not processed_data:
                     return
@@ -211,26 +211,23 @@ def main():
                 if tables:
                     st.success(f"✅ Extracted {len(tables)} data table(s) directly from PDFs!")
                     try:
-                        # We'll assume the most important data is in the first table
                         table_data = tables[0].get('data', [])
                         if len(table_data) > 1:
                             headers = table_data[0]
                             rows = table_data[1:]
                             metrics_df = pd.DataFrame(rows, columns=headers)
-                            # You may need to rename columns to match your other functions' needs
-                            # For example: metrics_df.rename(columns={'Test Name': 'metric'}, inplace=True)
                         else:
                             st.warning("Found a table, but it was empty or malformed.")
                     except Exception as e:
                         st.error(f"Could not convert extracted table to a DataFrame. Error: {e}")
                 else:
-                    st.warning("⚠️ No data tables found by the parser. Metrics will be extracted from text via LLM.")
+                    st.warning("⚠️ No data tables found. Metrics will be extracted from text via LLM.")
 
-                # Generate summary and extract metrics via LLM as a fallback or for text-based info
+                # Generate summary and extract metrics via LLM as a fallback
                 summary = summarize_text(raw_text)
                 if summary:
                     st.session_state.summary = summary
-                    if metrics_df.empty: # Only use LLM's metrics if table extraction failed
+                    if metrics_df.empty:
                         parsed_data = parse_llm_summary(summary)
                         metrics_df = pd.DataFrame(parsed_data)
                 
@@ -240,7 +237,7 @@ def main():
                     try:
                         vectorstore = get_vectorstore(text_chunks)
                         st.session_state.conversation = get_conversation_chain(vectorstore)
-                        st.success("✅ Processing complete! You can now ask questions about your documents.")
+                        st.success("✅ Processing complete! You can now ask questions.")
                     except Exception as e:
                         st.error(f"❌ Error setting up conversation: {e}")
 
@@ -248,9 +245,7 @@ def main():
     if st.session_state.summary:
         st.subheader("📊 Analysis Dashboard")
         
-        # Check if we have a DataFrame to work with
         if not metrics_df.empty:
-            # Re-using your existing components with the more reliable DataFrame
             display_metric_summary(metrics_df.to_dict('records'))
             predict_conditions(metrics_df.to_dict('records'))
 
@@ -263,7 +258,6 @@ def main():
             
             display_reference_table(metrics_df)
             
-            # Download buttons
             pdf_report = create_clinical_summary_pdf(metrics_df)
             st.download_button("📄 Download PDF Report", pdf_report, "clinical_report.pdf", "application/pdf")
             download_metrics(metrics_df.to_dict('records'))
