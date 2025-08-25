@@ -1,21 +1,20 @@
-# -- Extra package locations --
---find-links https://download.pytorch.org/whl/torch_stable.html
---find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cu118/torch2.1/index.html
+# -- Extra package locations for PyTorch --
+--find-links https://download.pytorch.org/whl/cpu/torch_stable.html
 
 # -- Core App & LLM Dependencies --
 streamlit
 python-dotenv
 od-parse @ git+https://github.com/octondata/od-parse.git
-# PyPDF2 is no longer used by the app, you can remove it if you wish
 langchain
 langchain-community
 langchain-openai
 openai
 sentence-transformers
+# Use the CPU version of FAISS
 faiss-cpu
-fpdf
 
 # -- Data Analysis & Plotting --
+fpdf
 prophet
 numpy
 scipy
@@ -26,7 +25,9 @@ kaleido
 matplotlib
 seaborn
 
-# -- ML Frameworks (versions must match the links above) --
-torch==2.1.0+cu118
-torchvision==0.16.0+cu118
-detectron2
+# -- ML Frameworks (CPU Versions) --
+# Use CPU-only versions of torch and torchvision
+torch
+torchvision
+# Install Detectron2 from source for CPU compatibility
+detectron2 @ git+https://github.com/facebookresearch/detectron2.git
