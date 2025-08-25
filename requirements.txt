@@ -17,7 +17,6 @@ kaleido
 matplotlib
 seaborn
 -e git+https://github.com/octondata/od-parse.git#egg=od-parse
-# --- Added to fix warnings ---
 JPype1
 transformers
 torch
