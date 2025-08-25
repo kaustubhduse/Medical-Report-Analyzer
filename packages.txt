@@ -12,10 +12,3 @@ libxrandr2
 libxss1
 libxtst6
 libasound2
-libgl1-mesa-glx
-poppler-utils
-default-jre
-tesseract-ocr
-fonts-dejavu
-fonts-liberation
-fonts-freefont-ttf
