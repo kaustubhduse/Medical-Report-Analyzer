@@ -1,4 +1,4 @@
-# -- Extra package locations for PyTorch --
+# -- Extra package locations for PyTorch (CPU-only builds) --
 --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
 
 # -- Core App & LLM Dependencies --
@@ -10,7 +10,6 @@ langchain-community
 langchain-openai
 openai
 sentence-transformers
-# Use the CPU version of FAISS
 faiss-cpu
 
 # -- Data Analysis & Plotting --
@@ -25,9 +24,9 @@ kaleido
 matplotlib
 seaborn
 
-# -- ML Frameworks (CPU Versions) --
-# Use CPU-only versions of torch and torchvision
-torch
-torchvision
-# Install Detectron2 from source for CPU compatibility
+# -- ML Frameworks (install these BEFORE detectron2) --
+torch>=2.0
+torchvision>=0.15
+
+# -- Computer Vision / Parsing --
 detectron2 @ git+https://github.com/facebookresearch/detectron2.git
