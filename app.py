@@ -111,7 +111,7 @@ def summarize_text(text):
             "Return metrics only in JSON format and other information in plain text.\n"
             f"{text}"
         )
-        summary = ll.predict(summary_prompt)
+        summary = llm.predict(summary_prompt)
         return summary
     except Exception as e:
         st.error(f"❌ Error generating summary: {e}")
