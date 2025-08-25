@@ -1,10 +1,8 @@
-# -- Extra package locations for PyTorch (CPU-only builds) --
---find-links https://download.pytorch.org/whl/cpu/torch_stable.html
 
 # -- Core App & LLM Dependencies --
 streamlit
 python-dotenv
-od-parse @ git+https://github.com/octondata/od-parse.git
+od-parse[all] @ git+https://github.com/octondata/od-parse.git
 langchain
 langchain-community
 langchain-openai
@@ -24,9 +22,4 @@ kaleido
 matplotlib
 seaborn
 
-# -- ML Frameworks (install these BEFORE detectron2) --
-torch>=2.0
-torchvision>=0.15
 
-# -- Computer Vision / Parsing --
-detectron2 @ git+https://github.com/facebookresearch/detectron2.git
