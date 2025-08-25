@@ -3,10 +3,11 @@ import pandas as pd
 from dotenv import load_dotenv
 import os
 
-# --- New od-parser Imports ---
-# Replaces PyPDF2 for superior parsing
-from od_parse.main import PDFPipeline
+# --- New od-parser Imports (Corrected) ---
+# Replaces PyPDF2 for superior parsing.
+# PDFPipeline and Stages are all located in the 'advanced.pipeline' module.
 from od_parse.advanced.pipeline import (
+    PDFPipeline,
     LoadDocumentStage,
     BasicParsingStage,
     TableExtractionStage,
@@ -22,6 +23,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 
 # --- Your Custom Project Modules ---
+# Ensure these files exist in your project structure
 from data_analysis.data_analysis import (
     parse_llm_summary,
     display_metric_summary,
