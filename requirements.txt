@@ -1,7 +1,12 @@
+# -- Extra package locations --
+--find-links https://download.pytorch.org/whl/torch_stable.html
+--find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cu118/torch2.1/index.html
+
+# -- Core App & LLM Dependencies --
 streamlit
 python-dotenv
 od-parse @ git+https://github.com/octondata/od-parse.git
-PyPDF2
+# PyPDF2 is no longer used by the app, you can remove it if you wish
 langchain
 langchain-community
 langchain-openai
@@ -9,6 +14,8 @@ openai
 sentence-transformers
 faiss-cpu
 fpdf
+
+# -- Data Analysis & Plotting --
 prophet
 numpy
 scipy
@@ -19,10 +26,7 @@ kaleido
 matplotlib
 seaborn
 
-# PyTorch (choose version based on your system, example for CUDA 11.8)
-torch==2.1.0+cu118 -f https://download.pytorch.org/whl/torch_stable.html
-torchvision==0.16.0+cu118 -f https://download.pytorch.org/whl/torch_stable.html
-
-# Detectron2 (must match torch/CUDA)
--f https://dl.fbaipublicfiles.com/detectron2/wheels/cu118/torch2.1/index.html
+# -- ML Frameworks (versions must match the links above) --
+torch==2.1.0+cu118
+torchvision==0.16.0+cu118
 detectron2
