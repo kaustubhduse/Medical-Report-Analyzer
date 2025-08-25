@@ -1,14 +1,15 @@
-
 # -- Core App & LLM Dependencies --
 streamlit
 python-dotenv
-od-parse[all] @ git+https://github.com/octondata/od-parse.git
+od-parse @ git+https://github.com/octondata/od-parse.git
 langchain
 langchain-community
 langchain-openai
 openai
 sentence-transformers
 faiss-cpu
+torch   # CPU version
+torchvision   # CPU version
 
 # -- Data Analysis & Plotting --
 fpdf
@@ -22,4 +23,19 @@ kaleido
 matplotlib
 seaborn
 
+# -- Text & Language Processing --
+spacy>=3.6.0
+langdetect>=1.0.9
+polyglot>=16.7.4
+googletrans>=4.0.0
 
+# -- Async & caching --
+aiofiles>=23.0.0
+redis>=4.5.0
+joblib>=1.3.0
+
+# -- Markdown & logging --
+rich>=14.1.0
+markdown-it-py>=4.0.0
+pygments>=2.13.0
+mdurl~=0.1
