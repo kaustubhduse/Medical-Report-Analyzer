@@ -17,4 +17,4 @@ plotly
 kaleido
 matplotlib
 seaborn
-od-parse[all] @ git+https://github.com/octondata/od-parse.git
+-e git+https://github.com/octondata/od-parse.git#egg=od-parse[all]
