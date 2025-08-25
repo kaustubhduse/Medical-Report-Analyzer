@@ -8,8 +8,9 @@ langchain-openai
 openai
 sentence-transformers
 faiss-cpu
-torch   # CPU version
-torchvision   # CPU version
+torch      # CPU version
+torchvision  # CPU version
+opencv-python-headless   # Required by od-parse
 
 # -- Data Analysis & Plotting --
 fpdf
