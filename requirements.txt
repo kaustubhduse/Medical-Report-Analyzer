@@ -1,6 +1,5 @@
 streamlit
 python-dotenv
-PyPDF2
 langchain
 langchain-community
 langchain-openai
@@ -18,3 +17,11 @@ kaleido
 matplotlib
 seaborn
 -e git+https://github.com/octondata/od-parse.git#egg=od-parse
+# --- Added to fix warnings ---
+JPype1
+transformers
+torch
+langdetect
+spacy
+polyglot
+googletrans==4.0.0-rc1
