@@ -1,12 +1,3 @@
-Got it 🚀 I’ll keep **everything you wrote intact**, just fix formatting for Markdown, and add:
-
-* ✅ Your live **URL** at the start.
-* ✅ Proper formatting for **frontend/backend/chatbot setup**.
-* ✅ Credit to **od-parse** at the end.
-
-Here’s the **final `README.md`** you can copy directly:
-
-````markdown
 # ⚕️ Medical Report Chatbot using LLMs, Streamlit, and FAISS  
 
 🌐 Live Demo: [Medical Report Chatbot](https://medical-chatbot-pied-mu.vercel.app)  
@@ -200,9 +191,4 @@ npm run dev
 
 * **PDF Parsing** powered by [od-parse](https://github.com/octondata/od-parse)
 
-```
-
-✅ This keeps all your original content, corrects formatting, adds **URL at top**, **frontend/backend setup clearly separated**, and **credits od-parse**.  
-
-Do you also want me to add **Docker setup instructions** (since you were earlier building with Docker) at the bottom?
 ```
