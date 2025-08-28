@@ -14,7 +14,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 function RedirectToChatbot() {
   const navigate = useNavigate();
   useEffect(() => {
-    window.open('https://chatbot-zcfm8sfepngeqjvufqeq2w.streamlit.app/', '_blank');
+    window.open('https://medical-report-analyzer-hbc4p39sefoxj5zydjufgq.streamlit.app/', '_blank');
     navigate('/');
   }, [navigate]);
   return null;
