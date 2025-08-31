@@ -240,9 +240,11 @@ def main():
                     
                     summary_path = os.path.join("client", "client-side", "public", "summary.txt")
                     os.makedirs(os.path.dirname(summary_path), exist_ok=True)
+                    
                     with open(summary_path, "w", encoding="utf-8") as f:
-                       f.write(summary)
-                    st.session_state.summary = summary
+                       f.write(summary_str)
+                       
+                    st.session_state.summary = summary_str
                     
                     st.download_button(
                         "📥 Download Medical Summary",
