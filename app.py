@@ -346,7 +346,11 @@ def main():
         # --- Visual Analysis Tab ---
         with tab_visuals:
             st.header("Visual Analysis of Key Metrics")
-            if not st.session_state.metrics_df.empty:
+
+            # --- FIX START ---
+            # Check if metrics_df is not None before checking if it's empty
+            if st.session_state.metrics_df is not None and not st.session_state.metrics_df.empty:
+            # --- FIX END ---
                 col1, col2 = st.columns(2)
                 with col1:
                     st.subheader("Metric Comparison")
@@ -367,7 +371,7 @@ def main():
                     )
             else:
                 st.warning("No metrics data available to generate visuals.")
-
+                
         # --- Advanced Insights Tab ---
         with tab_advanced:
             st.header("Advanced Health Insights")
