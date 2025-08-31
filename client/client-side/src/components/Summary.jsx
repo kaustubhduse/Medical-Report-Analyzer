@@ -49,7 +49,7 @@
 
     // --- Fetch the summary text file ---
     useEffect(() => {
-        fetch("/static/summary.txt")
+        fetch("/summary.txt")
         .then((response) => response.text())
         .then((text) => setSummary(text))
         .catch((error) => console.error("Error loading summary:", error))
