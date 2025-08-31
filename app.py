@@ -237,7 +237,7 @@ def main():
                 
                 if summary:
                     summary_str = str(summary)
-                    
+
                     summary_path = os.path.join("client", "client-side", "public", "summary.txt")
                     os.makedirs(os.path.dirname(summary_path), exist_ok=True)
                     
@@ -245,7 +245,8 @@ def main():
                        f.write(summary_str)
                        
                     st.session_state.summary = summary_str
-                    
+                    st.text(f"Writing summary to: {summary_path}")
+                    st.text(f"Summary preview: {summary_str[:200]}...")
                     st.download_button(
                         "📥 Download Medical Summary",
                         summary.encode('utf-8'),
