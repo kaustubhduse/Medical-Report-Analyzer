@@ -309,18 +309,36 @@ def main():
         with tab_summary:
             st.header("AI-Generated Summary")
             if st.session_state.summary:
-                summary_text, json_metrics = parse_llm_summary(st.session_state.summary, return_summary_text=True)
+                # Get the full text from the session state
+                full_summary_string = str(st.session_state.summary)
+
+                # --- FIX START ---
+                # 1. Call the function the correct way to get the structured metric data.
+                json_metrics = parse_llm_summary(full_summary_string)
+
+                # 2. Manually find and separate the plain text summary from the full string.
+                # The summary text is usually everything before the JSON data starts.
+                summary_text = full_summary_string
+                json_start_index = full_summary_string.find('[')
+                if json_start_index != -1:
+                    summary_text = full_summary_string[:json_start_index].strip()
+                # --- FIX END ---
+                
+                # Display the cleaned summary text
                 st.markdown(summary_text)
 
                 st.download_button(
                     "📥 Download Text Summary",
-                    data=st.session_state.summary.encode('utf-8'),
+                    data=full_summary_string.encode('utf-8'),
                     file_name="medical_summary.txt",
                     mime="text/plain"
                 )
                 
                 st.header("Extracted Health Metrics")
-                st.dataframe(st.session_state.metrics_df)
+                # The dataframe from the session state is still correct
+                st.dataframe(st.session_state.metrics_df) 
+                
+                # Use the correctly parsed json_metrics for the download
                 download_metrics(json_metrics)
             else:
                 st.warning("No summary available.")
