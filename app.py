@@ -238,8 +238,8 @@ def main():
                 
                 if summary:
                     st.session_state.summary = summary
-                    summary_path = os.path.join("static", "summary.txt")
-                    os.makedirs("static", exist_ok=True)
+                    summary_path = os.path.join(".streamlit", "static", "summary.txt")
+                    os.makedirs(os.path.dirname(summary_path), exist_ok=True)
                     with open(summary_path, "w", encoding="utf-8") as f:
                        f.write(summary)
                     st.download_button(
