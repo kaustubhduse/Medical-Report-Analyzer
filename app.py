@@ -235,12 +235,15 @@ def main():
                 # Generate summary
                 summary = summarize_text(raw_text)
                 
-                summary_path = os.path.join("client", "client-side", "public", "summary.txt")
-                os.makedirs(os.path.dirname(summary_path), exist_ok=True)
-                with open(summary_path, "w", encoding="utf-8") as f:
-                    f.write(summary)
                 if summary:
+                    summary_str = str(summary)
+                    
+                    summary_path = os.path.join("client", "client-side", "public", "summary.txt")
+                    os.makedirs(os.path.dirname(summary_path), exist_ok=True)
+                    with open(summary_path, "w", encoding="utf-8") as f:
+                       f.write(summary)
                     st.session_state.summary = summary
+                    
                     st.download_button(
                         "📥 Download Medical Summary",
                         summary.encode('utf-8'),
