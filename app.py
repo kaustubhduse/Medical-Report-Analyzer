@@ -13,6 +13,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
+from langchain.schema import HumanMessage, AIMessage
 
 from data_analysis.data_analysis import (
     parse_llm_summary,
@@ -34,7 +35,8 @@ from data_analysis.trends import show_trend_analysis, detect_anomalies
 load_dotenv()
 
 
-# --- MODIFIED FUNCTION to accept advanced options ---
+# --- Core Functions (Unchanged) ---
+
 def get_pdf_text(pdf_docs, pipeline_type="default", use_deep_learning=False):
     """
     Parses uploaded PDF documents using od-parse with user-selected options
@@ -46,20 +48,16 @@ def get_pdf_text(pdf_docs, pipeline_type="default", use_deep_learning=False):
         st.warning("Deep Learning is enabled. Processing will be slower but more accurate. 🧠")
 
     for pdf in pdf_docs:
-        # od-parse needs a file path, so we save the uploaded file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
             tmp_file.write(pdf.getvalue())
             tmp_file_path = tmp_file.name
 
         try:
-            # Step 1: Parse the PDF using od-parse with selected advanced options
             parsed_data = parse_pdf(
                 file_path=tmp_file_path,
                 pipeline_type=pipeline_type,
                 use_deep_learning=use_deep_learning
             )
-
-            # Step 2: Convert the parsed data to a Markdown string
             markdown_text = convert_to_markdown(
                 parsed_data,
                 include_images=False,
@@ -67,11 +65,10 @@ def get_pdf_text(pdf_docs, pipeline_type="default", use_deep_learning=False):
                 include_forms=True,
                 include_handwritten=True
             )
-            full_text += markdown_text + "\n\n---\n\n"  # Add separator between docs
+            full_text += markdown_text + "\n\n---\n\n"
         except Exception as e:
             st.error(f"⚠️ Error parsing {pdf.name} with od-parse: {e}")
         finally:
-            # Clean up the temporary file
             os.remove(tmp_file_path)
 
     if not full_text.strip():
@@ -126,7 +123,6 @@ def get_text_chunks(text):
         length_function=len
     )
     chunks = text_splitter.split_text(text)
-
     if not chunks:
         st.error("⚠️ No valid text chunks found! Ensure PDFs contain readable text.")
         return None
@@ -136,14 +132,11 @@ def get_text_chunks(text):
 def get_vectorstore(text_chunks):
     if not text_chunks:
         raise ValueError("Error: No text chunks provided for FAISS indexing!")
-
+    
     model_name = "sentence-transformers/all-mpnet-base-v2"
     embeddings = HuggingFaceEmbeddings(model_name=model_name)
-
-    vectorstore = FAISS.from_texts(
-        texts=text_chunks,
-        embedding=embeddings,
-        metadatas=[{}]*len(text_chunks))
+    
+    vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
     return vectorstore
 
 
@@ -159,9 +152,7 @@ def get_conversation_chain(vectorstore):
             api_key=api_key,
             model="mistralai/Mixtral-8x7B-Instruct-v0.1",
         )
-
         memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
-
         conversation_chain = ConversationalRetrievalChain.from_llm(
             llm=llm,
             retriever=vectorstore.as_retriever(),
@@ -174,171 +165,215 @@ def get_conversation_chain(vectorstore):
 
 
 def handle_userinput(user_question):
-    if st.session_state.conversation:
-        response = st.session_state.conversation({'question': user_question})
+    """
+    Processes user question, gets response, and updates chat history in session state.
+    """
+    if "conversation" in st.session_state and st.session_state.conversation:
+        with st.spinner("Thinking..."):
+            response = st.session_state.conversation({'question': user_question})
         st.session_state.chat_history = response['chat_history']
-
-        for i, message in enumerate(st.session_state.chat_history):
-            role = "User" if i % 2 == 0 else "Bot"
-            st.write(f"**{role}:** {message.content}")
     else:
-        st.warning("⚠️ No conversation started yet! Upload PDFs and process them first.")
+        st.warning("⚠️ No conversation started yet! Upload and process PDFs first.")
 
+# --- Main Application UI and Logic ---
 
 def main():
-    st.set_page_config(page_title="Medical Chatbot", page_icon="⚕️")
+    st.set_page_config(page_title="Medical Report Analyzer", page_icon="⚕️", layout="wide")
 
-    for key in ["conversation", "chat_history", "pdf_text", "text_chunks", "vectorstore", "summary"]:
+    # Initialize session state variables
+    session_keys = [
+        "conversation", "chat_history", "summary", "metrics_df", 
+        "risk_assessment", "similar_reports", "pdf_report_bytes"
+    ]
+    for key in session_keys:
         if key not in st.session_state:
             st.session_state[key] = None
 
-    st.header("⚕️ Chat with Medical Reports")
-
-    user_question = st.text_input("Ask a question about your medical report:")
-    if user_question:
-        handle_userinput(user_question)
-
+    # --- Sidebar for Controls ---
     with st.sidebar:
-        st.subheader("📄 Upload Medical Reports (PDF)")
-        pdf_docs = st.file_uploader("Upload PDFs and click 'Process'", accept_multiple_files=True)
+        st.image("https://i.imgur.com/g0Dr1w1.png", width=100) # Placeholder logo
+        st.title("👨‍⚕️ Report Analyzer")
+        st.markdown("---")
         
-        # --- NEW: Advanced Parsing Options ---
-        st.subheader("⚙️ Parsing Options")
-        
-        pipeline_type = st.selectbox(
-            "Select Parsing Pipeline:",
-            options=["default", "forms", "structure", "full"],
-            help="Choose the type of content to focus on. 'Full' is the most comprehensive."
+        st.subheader("📄 Upload Your Reports")
+        pdf_docs = st.file_uploader(
+            "Upload your PDF medical reports and click 'Process'", 
+            accept_multiple_files=True,
+            type="pdf"
         )
         
+        st.markdown("---")
+        st.subheader("⚙️ Advanced Options")
+        pipeline_type = st.selectbox(
+            "Parsing Pipeline:",
+            options=["default", "forms", "structure", "full"],
+            index=3, # Default to 'full' for best results
+            help="Choose the parsing method. 'Full' is the most comprehensive and recommended."
+        )
         use_deep_learning = st.checkbox(
             "Enable Deep Learning",
             value=False,
-            help="Slower but provides more accurate extraction for tables and forms."
+            help="Slower, but more accurate for complex tables and layouts. Requires powerful hardware."
         )
-        # --- END NEW ---
+        st.markdown("---")
 
-        if st.button("🚀 Process"):
-            with st.spinner("⏳ Processing... This may take a moment."):
-                if not pdf_docs:
-                    st.error("⚠️ Please upload at least one PDF file!")
-                    return
+        if st.button("🚀 Process Reports", type="primary"):
+            if not pdf_docs:
+                st.error("⚠️ Please upload at least one PDF file!")
+            else:
+                with st.spinner("Analyzing documents... This might take a moment."):
+                    # Step 1: Extract text from PDFs
+                    raw_text = get_pdf_text(pdf_docs, pipeline_type, use_deep_learning)
+                    if not raw_text:
+                        return
 
-                # --- UPDATED to pass options to the parsing function ---
-                raw_text = get_pdf_text(pdf_docs, pipeline_type, use_deep_learning)
-                
-                if not raw_text:
-                    return
-
-                st.session_state.pdf_text = raw_text
-
-                # Generate summary
-                summary = summarize_text(raw_text)
-                
-                if summary:
-                    summary_str = str(summary)
-
+                    # Step 2: Summarize and extract metrics with LLM
+                    summary = summarize_text(raw_text)
+                    if not summary:
+                        return
+                    st.session_state.summary = summary
+                    
+                    # Save summary for external use
                     summary_path = os.path.join("client", "client-side", "public", "summary.txt")
                     os.makedirs(os.path.dirname(summary_path), exist_ok=True)
-                    
                     with open(summary_path, "w", encoding="utf-8") as f:
-                       f.write(summary_str)
-                       
-                    st.session_state.summary = summary_str
-                    st.text(f"Writing summary to: {summary_path}")
-                    st.text(f"Summary preview: {summary_str[:200]}...")
-                    st.download_button(
-                        "📥 Download Medical Summary",
-                        summary.encode('utf-8'),
-                        file_name="medical_summary.txt",
-                        mime="text/plain"
-                    )
-                else:
-                    st.warning("⚠️ Could not generate summary.")
-                    return
+                        f.write(str(summary))
+                        
+                    # Step 3: Parse summary to get structured data
+                    parsed_data = parse_llm_summary(summary)
+                    st.session_state.metrics_df = pd.DataFrame(parsed_data)
 
-                # Extract health metrics and display
-                parsed_data = parse_llm_summary(summary)
-                metrics_df = pd.DataFrame(parsed_data)
+                    # Step 4: Create vector store and conversation chain for chat
+                    text_chunks = get_text_chunks(raw_text)
+                    if not text_chunks:
+                        return
+                        
+                    try:
+                        vectorstore = get_vectorstore(text_chunks)
+                        st.session_state.conversation = get_conversation_chain(vectorstore)
+                        st.session_state.chat_history = []
+                    except ValueError as e:
+                        st.error(f"❌ Error creating vector store: {e}")
+                        return
 
-                # Text chunking + vectorstore + conversation setup
-                text_chunks = get_text_chunks(raw_text)
-                if not text_chunks:
-                    return
+                    # Step 5: Run advanced analysis
+                    predictor = DiseasePredictor()
+                    metrics_dict = {item['metric']: item['value'] for item in parsed_data}
+                    st.session_state.risk_assessment = predictor.predict_risk(metrics_dict)
+                    
+                    comparator = ReportComparator(vectorstore)
+                    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+                    text_embedding = embedding_model.embed_documents([raw_text])[0]
+                    st.session_state.similar_reports = comparator.find_similar_reports(text_embedding)
 
-                st.session_state.text_chunks = text_chunks
+                    # Step 6: Generate downloadable PDF report
+                    pdf_report_bytes = create_clinical_summary_pdf(st.session_state.metrics_df)
+                    st.session_state.pdf_report_bytes = pdf_report_bytes
+                    
+                    st.success("✅ Analysis complete! View the results in the tabs.")
 
-                try:
-                    vectorstore = get_vectorstore(text_chunks)
-                    st.session_state.vectorstore = vectorstore
-                    st.session_state.conversation = get_conversation_chain(vectorstore)
-                    st.success("✅ Processing complete! You can now ask questions.")
-                except ValueError as e:
-                    st.error(f"❌ Error: {e}")
+    # --- Main Panel for Displaying Results ---
+    st.title("⚕️ Interactive Medical Report Dashboard")
+    st.markdown("Welcome! Upload your medical reports via the sidebar to unlock insights about your health data.")
 
-                # The rest of the app logic remains the same...
-                predictor = DiseasePredictor()
-                metrics_dict = {item['metric']: item['value'] for item in parsed_data}
-                risk_assessment = predictor.predict_risk(metrics_dict)
+    if not st.session_state.conversation:
+        st.info("⬆️ Upload your reports and click the **'Process Reports'** button in the sidebar to begin.")
+        st.image("https://i.imgur.com/A6f5p6H.png", use_column_width=True) # Placeholder image
+    else:
+        # --- Create Tabs for Different Views ---
+        tab_chat, tab_summary, tab_visuals, tab_advanced = st.tabs([
+            "💬 **Chat with Report**", 
+            "📄 **AI Summary & Metrics**", 
+            "📊 **Visual Analysis**", 
+            "🔬 **Advanced Insights**"
+        ])
 
-                st.subheader("🩺 Disease Risk Assessment")
-                if 'anemia' in risk_assessment:
-                    st.progress(risk_assessment['anemia']['probability'])
-                    st.markdown(risk_assessment['anemia']['advice'])
+        # --- Chat Tab ---
+        with tab_chat:
+            st.header("Ask Questions About Your Report")
+            st.markdown("Use this chat to ask specific questions about the content of your uploaded document(s).")
+            
+            # Display chat history
+            if st.session_state.chat_history:
+                for message in st.session_state.chat_history:
+                    role = "user" if isinstance(message, HumanMessage) else "assistant"
+                    with st.chat_message(role):
+                        st.markdown(message.content)
 
-                comparator = ReportComparator(st.session_state.vectorstore)
-                embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
-                text_embedding = embedding_model.embed_documents([raw_text])[0]
-                similar_reports = comparator.find_similar_reports(text_embedding)
+            # Chat input
+            if user_question := st.chat_input("e.g., What was my white blood cell count?"):
+                handle_userinput(user_question)
+                st.rerun() # Rerun to display the latest chat message
 
-                if similar_reports:
-                    st.subheader("🔍 Similar Reports Found")
-                    for report, similarity in similar_reports:
-                        st.write(f"**{similarity:.1%} match**: {report['diagnosis']}")
+        # --- Summary & Metrics Tab ---
+        with tab_summary:
+            st.header("AI-Generated Summary")
+            if st.session_state.summary:
+                summary_text, json_metrics = parse_llm_summary(st.session_state.summary, return_summary_text=True)
+                st.markdown(summary_text)
 
-                if len(pdf_docs) > 1:
-                    def process_multiple_reports(pdf_docs):
-                        historical_data = []
-                        for pdf in pdf_docs:
-                            text = get_pdf_text([pdf], pipeline_type, use_deep_learning)
-                            if text:
-                                summary = summarize_text(text)
-                                if summary:
-                                    parsed = parse_llm_summary(summary)
-                                    report_date = pdf.name
-                                    for item in parsed:
-                                        item["date"] = report_date
-                                    historical_data.extend(parsed)
-                        return historical_data
+                st.download_button(
+                    "📥 Download Text Summary",
+                    data=st.session_state.summary.encode('utf-8'),
+                    file_name="medical_summary.txt",
+                    mime="text/plain"
+                )
+                
+                st.header("Extracted Health Metrics")
+                st.dataframe(st.session_state.metrics_df)
+                download_metrics(json_metrics)
+            else:
+                st.warning("No summary available.")
 
-                    historical_data = process_multiple_reports(pdf_docs)
-                    if historical_data:
-                        historical_df = pd.DataFrame(historical_data)
-                        if "value" in historical_df.columns:
-                            historical_df["value"] = pd.to_numeric(historical_df["value"], errors="coerce")
-                        if "date" in historical_df.columns:
-                            historical_df["date"] = historical_df["date"].astype(str)
-
-                display_metric_summary(parsed_data)
-                predict_conditions(parsed_data)
-
-                st.subheader("📈 Interactive Visual Analysis")
+        # --- Visual Analysis Tab ---
+        with tab_visuals:
+            st.header("Visual Analysis of Key Metrics")
+            if not st.session_state.metrics_df.empty:
                 col1, col2 = st.columns(2)
                 with col1:
-                    plot_metric_comparison(metrics_df)
+                    st.subheader("Metric Comparison")
+                    plot_metric_comparison(st.session_state.metrics_df)
                 with col2:
-                    generate_radial_health_score(metrics_df)
+                    st.subheader("Overall Health Score")
+                    generate_radial_health_score(st.session_state.metrics_df)
 
-                display_reference_table(metrics_df)
+                st.subheader("Reference Ranges")
+                display_reference_table(st.session_state.metrics_df)
+                
+                if st.session_state.pdf_report_bytes:
+                    st.download_button(
+                        "📄 Download Full PDF Report",
+                        data=st.session_state.pdf_report_bytes,
+                        file_name="clinical_summary_report.pdf",
+                        mime="application/pdf"
+                    )
+            else:
+                st.warning("No metrics data available to generate visuals.")
 
-                pdf_report = create_clinical_summary_pdf(metrics_df)
-                st.download_button(
-                   "📄 Download Full PDF Report",
-                   pdf_report,
-                   "clinical_report.pdf",
-                   "application/pdf"
-                )
-                download_metrics(parsed_data)
+        # --- Advanced Insights Tab ---
+        with tab_advanced:
+            st.header("Advanced Health Insights")
+
+            st.subheader("🩺 Disease Risk Assessment")
+            if st.session_state.risk_assessment:
+                 if 'anemia' in st.session_state.risk_assessment:
+                    risk_info = st.session_state.risk_assessment['anemia']
+                    st.write(f"**Anemia Risk Probability:** {risk_info['probability']:.0%}")
+                    st.progress(risk_info['probability'])
+                    with st.expander("Show Advice"):
+                        st.markdown(risk_info['advice'])
+            else:
+                st.info("No risk assessment data available.")
+                
+            st.markdown("---")
+            
+            st.subheader("🔍 Similar Reports")
+            if st.session_state.similar_reports:
+                st.write("Found reports with similar profiles in our anonymized database:")
+                for report, similarity in st.session_state.similar_reports:
+                    st.success(f"**{similarity:.1%} match**: Related to '{report['diagnosis']}'")
+            else:
+                st.info("No similar reports were found.")
 
 if __name__ == '__main__':
     main()
