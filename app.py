@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 import os
 import tempfile
 
-# Use the main parse_pdf function which can handle different pipelines
 from od_parse import parse_pdf, convert_to_markdown
 
 from langchain.text_splitter import CharacterTextSplitter
@@ -31,11 +30,8 @@ from data_analysis.predictive import DiseasePredictor
 from data_analysis.similarity import ReportComparator
 from data_analysis.trends import show_trend_analysis, detect_anomalies
 
-# Load environment variables
 load_dotenv()
 
-
-# --- Core Functions (Unchanged) ---
 
 def get_pdf_text(pdf_docs, pipeline_type="default", use_deep_learning=False):
     """
@@ -175,12 +171,10 @@ def handle_userinput(user_question):
     else:
         st.warning("⚠️ No conversation started yet! Upload and process PDFs first.")
 
-# --- Main Application UI and Logic ---
 
 def main():
     st.set_page_config(page_title="Medical Report Analyzer", page_icon="⚕️", layout="wide")
 
-    # Initialize session state variables
     session_keys = [
         "conversation", "chat_history", "summary", "metrics_df", 
         "risk_assessment", "similar_reports", "pdf_report_bytes"
@@ -189,7 +183,6 @@ def main():
         if key not in st.session_state:
             st.session_state[key] = None
 
-    # --- Sidebar for Controls ---
     with st.sidebar:
         st.image("https://i.imgur.com/g0Dr1w1.png", width=100) # Placeholder logo
         st.title("👨‍⚕️ Report Analyzer")
@@ -272,7 +265,6 @@ def main():
                     
                     st.success("✅ Analysis complete! View the results in the tabs.")
 
-    # --- Main Panel for Displaying Results ---
     st.title("⚕️ Interactive Medical Report Dashboard")
     st.markdown("Welcome! Upload your medical reports via the sidebar to unlock insights about your health data.")
 
@@ -280,7 +272,6 @@ def main():
         st.info("⬆️ Upload your reports and click the **'Process Reports'** button in the sidebar to begin.")
         st.image("https://i.imgur.com/A6f5p6H.png", use_column_width=True) # Placeholder image
     else:
-        # --- Create Tabs for Different Views ---
         tab_chat, tab_summary, tab_visuals, tab_advanced = st.tabs([
             "💬 **Chat with Report**", 
             "📄 **AI Summary & Metrics**", 
@@ -293,14 +284,12 @@ def main():
             st.header("Ask Questions About Your Report")
             st.markdown("Use this chat to ask specific questions about the content of your uploaded document(s).")
             
-            # Display chat history
             if st.session_state.chat_history:
                 for message in st.session_state.chat_history:
                     role = "user" if isinstance(message, HumanMessage) else "assistant"
                     with st.chat_message(role):
                         st.markdown(message.content)
 
-            # Chat input
             if user_question := st.chat_input("e.g., What was my white blood cell count?"):
                 handle_userinput(user_question)
                 st.rerun() # Rerun to display the latest chat message
@@ -309,22 +298,15 @@ def main():
         with tab_summary:
             st.header("AI-Generated Summary")
             if st.session_state.summary:
-                # Get the full text from the session state
                 full_summary_string = str(st.session_state.summary)
 
-                # --- FIX START ---
-                # 1. Call the function the correct way to get the structured metric data.
                 json_metrics = parse_llm_summary(full_summary_string)
 
-                # 2. Manually find and separate the plain text summary from the full string.
-                # The summary text is usually everything before the JSON data starts.
                 summary_text = full_summary_string
                 json_start_index = full_summary_string.find('[')
                 if json_start_index != -1:
                     summary_text = full_summary_string[:json_start_index].strip()
-                # --- FIX END ---
                 
-                # Display the cleaned summary text
                 st.markdown(summary_text)
 
                 st.download_button(
@@ -335,22 +317,16 @@ def main():
                 )
                 
                 st.header("Extracted Health Metrics")
-                # The dataframe from the session state is still correct
                 st.dataframe(st.session_state.metrics_df) 
                 
-                # Use the correctly parsed json_metrics for the download
                 download_metrics(json_metrics)
             else:
                 st.warning("No summary available.")
 
-        # --- Visual Analysis Tab ---
         with tab_visuals:
             st.header("Visual Analysis of Key Metrics")
 
-            # --- FIX START ---
-            # Check if metrics_df is not None before checking if it's empty
             if st.session_state.metrics_df is not None and not st.session_state.metrics_df.empty:
-            # --- FIX END ---
                 col1, col2 = st.columns(2)
                 with col1:
                     st.subheader("Metric Comparison")
@@ -372,7 +348,6 @@ def main():
             else:
                 st.warning("No metrics data available to generate visuals.")
                 
-        # --- Advanced Insights Tab ---
         with tab_advanced:
             st.header("Advanced Health Insights")
 
