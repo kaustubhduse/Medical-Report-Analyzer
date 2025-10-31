@@ -16,4 +16,5 @@ libgl1-mesa-glx
 poppler-utils
 default-jdk
 tesseract-ocr
-
+python3-dev
+icu-dev
