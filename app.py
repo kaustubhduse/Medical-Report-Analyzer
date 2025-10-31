@@ -9,10 +9,12 @@ from od_parse import parse_pdf, convert_to_markdown
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_openai import ChatOpenAI
 from langchain_community.chat_models import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
+
+from langchain_community.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from langchain.schema import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 from data_analysis.data_analysis import (
     parse_llm_summary,
