@@ -2,7 +2,7 @@
 streamlit
 python-dotenv
 od-parse @ git+https://github.com/octondata/od-parse.git
-langchain
+langchain==0.1.13
 langchain-core
 langchain-text-splitters
 langchain-community
