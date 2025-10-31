@@ -10,7 +10,6 @@ from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI
-from langchain_community.chat_models import ChatOpenAI
 
 from langchain_core.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
