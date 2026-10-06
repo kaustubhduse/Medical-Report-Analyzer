@@ -1,7 +1,7 @@
 # Core App & LLM Dependencies
 streamlit
 python-dotenv
-od-parse @ git+https://github.com/octondata/od-parse.git
+pdfplumber
 langchain
 langchain-community
 langchain-openai
