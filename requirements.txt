@@ -3,6 +3,8 @@ streamlit
 python-dotenv
 pdfplumber
 langchain
+langchain-core
+langchain-text-splitters
 langchain-community
 langchain-openai
 openai

@@ -38,91 +38,63 @@ def inject_css():
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-    /* ── Global Dark Theme ── */
     html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
     .stApp                { background: #0d1117 !important; color: #e2e8f0 !important; }
     .main .block-container{ background: #0d1117 !important; }
-    /* Hide only menu and footer, NOT the header */
+
     #MainMenu { visibility: hidden; }
     footer    { visibility: hidden; }
 
-    /* Header — transparent background, keep it in flow so toggle button works */
+    /* Header transparent so toggle button stays visible */
     header[data-testid="stHeader"] {
-        background: rgba(240,245,255,0.0) !important;
+        background: rgba(13,17,23,0) !important;
         box-shadow: none !important;
     }
-    /* Hide deploy/share button inside header but keep the sidebar toggle */
     header[data-testid="stHeader"] .stDeployButton { display: none !important; }
 
-    /* ── Sidebar toggle button (when sidebar IS open — the ← arrow inside it) ── */
+    /* Sidebar open — collapse arrow */
     [data-testid="stSidebarCollapseButton"],
     [data-testid="stSidebarCollapseButton"] > button {
-        visibility: visible !important;
-        opacity: 1 !important;
-        display: flex !important;
-        background: rgba(255,255,255,0.12) !important;
+        visibility: visible !important; opacity: 1 !important; display: flex !important;
+        background: rgba(255,255,255,0.1) !important;
         border-radius: 8px !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
         color: #e2e8f0 !important;
     }
-    [data-testid="stSidebarCollapseButton"] > button:hover {
-        background: rgba(255,255,255,0.22) !important;
-    }
-    [data-testid="stSidebarCollapseButton"] svg {
-        fill: #e2e8f0 !important;
-        stroke: #e2e8f0 !important;
-    }
+    [data-testid="stSidebarCollapseButton"] svg { fill: #e2e8f0 !important; }
 
-    /* ── Sidebar toggle button (when sidebar IS collapsed — the → arrow on screen edge) ── */
+    /* Sidebar closed — expand tab on left edge */
     [data-testid="stSidebarCollapsedControl"],
     [data-testid="stSidebarCollapsedControl"] > button,
     [data-testid="collapsedControl"],
     [data-testid="collapsedControl"] > button {
-        visibility: visible !important;
-        opacity: 1 !important;
-        display: flex !important;
+        visibility: visible !important; opacity: 1 !important; display: flex !important;
         background: #1d4ed8 !important;
         border-radius: 0 10px 10px 0 !important;
         border: none !important;
         box-shadow: 3px 0 14px rgba(29,78,216,0.5) !important;
-        color: white !important;
         z-index: 9999 !important;
     }
-    [data-testid="stSidebarCollapsedControl"] > button:hover,
-    [data-testid="collapsedControl"] > button:hover {
-        background: #2563eb !important;
-        box-shadow: 3px 0 20px rgba(29,78,216,0.7) !important;
-    }
     [data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="collapsedControl"] svg {
-        fill: white !important;
-        stroke: white !important;
-    }
+    [data-testid="collapsedControl"] svg { fill: white !important; }
 
-    /* ── Sidebar ── */
+    /* Sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0b1437 0%, #0e2050 60%, #102766 100%) !important;
-        border-right: 1px solid rgba(99,179,237,0.15);
+        border-right: 1px solid rgba(99,179,237,0.15) !important;
     }
     [data-testid="stSidebar"] .stMarkdown p,
     [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] .stSubheader,
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3 {
-        color: #e2e8f0 !important;
-    }
+    [data-testid="stSidebar"] h3 { color: #e2e8f0 !important; }
     [data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
-        background: rgba(255,255,255,0.06) !important;
+        background: rgba(255,255,255,0.05) !important;
         border: 2px dashed rgba(99,179,237,0.4) !important;
         border-radius: 12px !important;
     }
-    [data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"]:hover {
-        border-color: rgba(99,179,237,0.8) !important;
-        background: rgba(99,179,237,0.08) !important;
-    }
     [data-testid="stSidebar"] .stSelectbox > div > div {
-        background: rgba(255,255,255,0.08) !important;
+        background: rgba(255,255,255,0.07) !important;
         border: 1px solid rgba(99,179,237,0.3) !important;
         color: #e2e8f0 !important;
         border-radius: 8px !important;
@@ -130,52 +102,48 @@ def inject_css():
     [data-testid="stSidebar"] .stCheckbox label { color: #cbd5e1 !important; }
     [data-testid="stSidebar"] hr { border-color: rgba(99,179,237,0.2) !important; }
 
-    /* ── Process Button ── */
+    /* Process button */
     [data-testid="stSidebar"] .stButton > button {
         background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 15px !important;
+        color: white !important; border: none !important;
+        border-radius: 12px !important; font-weight: 700 !important;
+        font-size: 15px !important; width: 100% !important;
         padding: 0.65rem 1.2rem !important;
-        width: 100% !important;
-        transition: all 0.25s ease !important;
         box-shadow: 0 4px 15px rgba(59,130,246,0.4) !important;
+        transition: all 0.25s ease !important;
     }
     [data-testid="stSidebar"] .stButton > button:hover {
         transform: translateY(-1px) !important;
-        box-shadow: 0 6px 20px rgba(59,130,246,0.55) !important;
+        box-shadow: 0 6px 20px rgba(59,130,246,0.6) !important;
     }
 
-    /* ── Main Title Area ── */
+    /* Sidebar brand block */
+    .sidebar-brand {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 1.2rem 0 0.8rem;
+        border-bottom: 1px solid rgba(99,179,237,0.2);
+        margin-bottom: 1rem;
+    }
+    .sidebar-brand .brand-title { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; margin-top: 0.5rem; }
+    .sidebar-brand .brand-sub   { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
+
+    /* Page header banner */
     .page-header {
         background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #0ea5e9 100%);
-        border-radius: 20px;
-        padding: 2rem 2.5rem;
-        margin-bottom: 1.5rem;
-        color: white;
+        border-radius: 20px; padding: 2rem 2.5rem; margin-bottom: 1.5rem;
     }
     .page-header h1 { color: white !important; font-size: 2rem !important; font-weight: 800 !important; margin: 0 !important; }
     .page-header p  { color: rgba(255,255,255,0.85) !important; margin: 0.4rem 0 0 !important; font-size: 1rem; }
 
-    /* ── Feature Cards (landing) ── */
+    /* Feature cards */
     .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem;
-        margin: 1.5rem 0;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1.5rem 0;
     }
     @media (max-width: 900px) { .feature-grid { grid-template-columns: repeat(2, 1fr); } }
     .feature-card {
-        background: #161b27;
-        border-radius: 16px;
-        padding: 1.4rem 1.2rem;
-        text-align: center;
+        background: #161b27; border-radius: 16px; padding: 1.4rem 1.2rem; text-align: center;
         box-shadow: 0 2px 16px rgba(0,0,0,0.4);
-        border-top: 3px solid transparent;
-        border: 1px solid rgba(255,255,255,0.06);
-        border-top-width: 3px;
+        border: 1px solid rgba(255,255,255,0.06); border-top-width: 3px;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .feature-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.5); }
@@ -187,147 +155,77 @@ def inject_css():
     .feature-card h4 { font-size: 0.95rem; font-weight: 700; color: #e2e8f0; margin: 0 0 0.3rem; }
     .feature-card p  { font-size: 0.8rem; color: #94a3b8; margin: 0; line-height: 1.4; }
 
-    /* ── Step badges in sidebar ── */
-    .step-badge {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 22px; height: 22px;
-        background: #3b82f6; color: white;
-        border-radius: 50%; font-size: 11px; font-weight: 700;
-        margin-right: 6px;
-    }
-
-    /* ── Tabs ── */
+    /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
-        background: #161b27 !important;
-        border-radius: 12px 12px 0 0 !important;
-        padding: 0.3rem 0.3rem 0 !important;
-        gap: 4px !important;
+        background: #161b27 !important; border-radius: 12px 12px 0 0 !important;
+        padding: 0.3rem 0.3rem 0 !important; gap: 4px !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
     }
     .stTabs [data-baseweb="tab"] {
-        border-radius: 8px 8px 0 0 !important;
-        font-weight: 500 !important;
-        font-size: 0.9rem !important;
-        padding: 0.6rem 1.2rem !important;
-        color: #94a3b8 !important;
-        background: transparent !important;
+        border-radius: 8px 8px 0 0 !important; font-weight: 500 !important;
+        font-size: 0.9rem !important; padding: 0.6rem 1.2rem !important;
+        color: #94a3b8 !important; background: transparent !important;
     }
     .stTabs [aria-selected="true"] {
-        background: #1e293b !important;
-        color: #60a5fa !important;
-        font-weight: 700 !important;
-        border-bottom: 3px solid #3b82f6 !important;
+        background: #1e293b !important; color: #60a5fa !important;
+        font-weight: 700 !important; border-bottom: 3px solid #3b82f6 !important;
     }
     .stTabs [data-baseweb="tab-panel"] {
-        background: #1e293b !important;
-        border-radius: 0 0 16px 16px !important;
-        padding: 1.5rem !important;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+        background: #1e293b !important; border-radius: 0 0 16px 16px !important;
+        padding: 1.5rem !important; box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
     }
 
-    /* ── Section Headers ── */
+    /* Section headers */
     .section-header {
         display: flex; align-items: center; gap: 10px;
-        padding-bottom: 0.75rem;
-        border-bottom: 2px solid rgba(99,179,237,0.2);
-        margin-bottom: 1.2rem;
+        padding-bottom: 0.75rem; border-bottom: 2px solid rgba(99,179,237,0.2); margin-bottom: 1.2rem;
     }
-    .section-header h2 {
-        font-size: 1.25rem !important; font-weight: 700 !important;
-        color: #93c5fd !important; margin: 0 !important;
-    }
+    .section-header h2 { font-size: 1.25rem !important; font-weight: 700 !important; color: #93c5fd !important; margin: 0 !important; }
 
-    /* ── Chat Bubbles ── */
+    /* Chat */
     [data-testid="stChatMessage"] {
-        border-radius: 14px !important;
-        padding: 0.8rem 1rem !important;
-        margin-bottom: 0.5rem !important;
-        background: #0f172a !important;
+        border-radius: 14px !important; padding: 0.8rem 1rem !important;
+        margin-bottom: 0.5rem !important; background: #0f172a !important;
         border: 1px solid rgba(99,179,237,0.15) !important;
     }
     .stChatInput textarea {
-        background: #161b27 !important;
-        color: #e2e8f0 !important;
-        border-radius: 12px !important;
-        border: 2px solid rgba(59,130,246,0.3) !important;
-        font-size: 0.95rem !important;
+        background: #161b27 !important; color: #e2e8f0 !important;
+        border-radius: 12px !important; border: 2px solid rgba(59,130,246,0.3) !important;
     }
-    .stChatInput textarea:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.2) !important;
-    }
+    .stChatInput textarea:focus { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.2) !important; }
 
-    /* ── Download Buttons ── */
+    /* Download buttons */
     .stDownloadButton > button {
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        border: 2px solid #3b82f6 !important;
-        color: #60a5fa !important;
-        background: rgba(59,130,246,0.1) !important;
-        transition: all 0.2s ease !important;
+        border-radius: 10px !important; font-weight: 600 !important;
+        border: 2px solid #3b82f6 !important; color: #60a5fa !important;
+        background: rgba(59,130,246,0.1) !important; transition: all 0.2s !important;
     }
-    .stDownloadButton > button:hover {
-        background: rgba(59,130,246,0.2) !important;
-        border-color: #60a5fa !important;
-    }
+    .stDownloadButton > button:hover { background: rgba(59,130,246,0.2) !important; }
 
-    /* ── DataFrames ── */
+    /* DataFrames */
     [data-testid="stDataFrame"] {
-        border-radius: 12px !important;
-        overflow: hidden !important;
+        border-radius: 12px !important; overflow: hidden !important;
         box-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
-        background: #161b27 !important;
     }
 
-    /* ── Progress bar ── */
-    .stProgress > div > div > div { border-radius: 99px !important; }
+    /* Progress */
     .stProgress > div { background: rgba(255,255,255,0.08) !important; border-radius: 99px !important; }
+    .stProgress > div > div > div { border-radius: 99px !important; }
 
-    /* ── Alert boxes ── */
-    [data-testid="stAlert"] {
-        border-radius: 12px !important;
-        background: rgba(30,41,59,0.8) !important;
-    }
+    /* Alerts */
+    [data-testid="stAlert"] { border-radius: 12px !important; }
 
-    /* ── Expander ── */
+    /* Expander */
     .streamlit-expanderHeader {
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        background: #161b27 !important;
-        color: #e2e8f0 !important;
+        border-radius: 10px !important; font-weight: 600 !important;
+        background: #161b27 !important; color: #e2e8f0 !important;
     }
-    .streamlit-expanderContent {
-        background: #0f172a !important;
-        border-radius: 0 0 10px 10px !important;
-    }
+    .streamlit-expanderContent { background: #0f172a !important; }
 
-    /* ── Selectbox & Inputs (main area) ── */
-    .stSelectbox > div > div,
-    .stTextInput > div > div > input {
-        background: #161b27 !important;
-        color: #e2e8f0 !important;
-        border-color: rgba(99,179,237,0.25) !important;
-    }
-
-    /* ── Markdown text ── */
-    .stMarkdown, .stMarkdown p, .stMarkdown li { color: #cbd5e1 !important; }
+    /* Text */
+    .stMarkdown p, .stMarkdown li { color: #cbd5e1 !important; }
     h1, h2, h3, h4 { color: #e2e8f0 !important; }
-    .stCaption, small { color: #64748b !important; }
-
-    /* ── Sidebar logo area ── */
-    .sidebar-brand {
-        display: flex; flex-direction: column; align-items: center;
-        padding: 1.2rem 0 0.8rem;
-        border-bottom: 1px solid rgba(99,179,237,0.2);
-        margin-bottom: 1rem;
-    }
-    .sidebar-brand .brand-title {
-        font-size: 1.1rem; font-weight: 700; color: #e2e8f0;
-        margin-top: 0.5rem; letter-spacing: 0.3px;
-    }
-    .sidebar-brand .brand-sub {
-        font-size: 0.72rem; color: #94a3b8; margin-top: 2px;
-    }
+    .stCaption { color: #64748b !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -336,13 +234,12 @@ def get_pdf_text(pdf_docs, pipeline_type="default", use_deep_learning=False):
     full_text = ""
     st.info(f"Running '{pipeline_type}' pipeline...")
     if use_deep_learning:
-        st.warning("Deep Learning is enabled. Processing will be slower but more accurate. 🧠")
+        st.warning("Deep Learning enabled — processing will be slower. 🧠")
 
     for pdf in pdf_docs:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
             tmp_file.write(pdf.getvalue())
             tmp_file_path = tmp_file.name
-
         try:
             parsed_data = parse_pdf(
                 file_path=tmp_file_path,
@@ -372,7 +269,7 @@ def summarize_text(text):
     try:
         api_key = os.getenv("TOGETHER_API_KEY")
         if not api_key:
-            st.error("❌ TOGETHER_API_KEY missing. Add it to Streamlit Secrets or .env file.")
+            st.error("❌ TOGETHER_API_KEY missing. Add it to Streamlit Secrets or .env.")
             return None
 
         llm = ChatOpenAI(
@@ -380,40 +277,23 @@ def summarize_text(text):
             api_key=api_key,
             model="mistralai/Mixtral-8x7B-Instruct-v0.1",
         )
-
         summary_prompt = (
-            "You are a medical expert assistant. Carefully read and summarize the following medical report, which is in Markdown format. "
-            "Your summary should include:\n"
-            "- Patient's name (if available)\n"
-            "- Date of the report (if available)\n"
-            "- Relevant medical history or background (in bullet points)\n"
-            "- Key findings and observations (in bullet points)\n"
-            "- Diagnoses or impressions (if mentioned)\n"
-            "- Recommendations for further tests, treatments, or follow-up (in bullet points)\n"
-            "\n"
-            "Extract medical metrics as a JSON array with the following fields:\n"
-            "- metric: Test name\n"
-            "- value: Numeric result\n"
-            "- reference_range: X-Y format\n"
-            "- unit: Measurement unit\n"
-            "Return metrics only in JSON format and other information in plain text.\n"
+            "You are a medical expert assistant. Carefully read and summarize the following medical report in Markdown format. "
+            "Include: patient name, date, medical history, key findings, diagnoses, and recommendations as bullet points.\n"
+            "Also extract medical metrics as a JSON array with fields: metric, value, reference_range, unit.\n"
+            "Return metrics only in JSON format and other info in plain text.\n"
             f"{text}"
         )
-        summary = llm.invoke(summary_prompt).content
-        return summary
+        return llm.invoke(summary_prompt).content
     except Exception as e:
         st.error(f"❌ Error generating summary: {e}")
         return None
 
 
 def get_text_chunks(text):
-    text_splitter = CharacterTextSplitter(
-        separator="\n",
-        chunk_size=1000,
-        chunk_overlap=200,
-        length_function=len
-    )
-    chunks = text_splitter.split_text(text)
+    chunks = CharacterTextSplitter(
+        separator="\n", chunk_size=1000, chunk_overlap=200, length_function=len
+    ).split_text(text)
     if not chunks:
         st.error("⚠️ No valid text chunks found.")
         return None
@@ -423,8 +303,7 @@ def get_text_chunks(text):
 def get_vectorstore(text_chunks):
     if not text_chunks:
         raise ValueError("No text chunks provided for FAISS indexing.")
-    model_name = "sentence-transformers/all-mpnet-base-v2"
-    embeddings = HuggingFaceEmbeddings(model_name=model_name)
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
     return FAISS.from_texts(texts=text_chunks, embedding=embeddings)
 
 
@@ -434,7 +313,6 @@ def get_conversation_chain(vectorstore):
         if not api_key:
             st.error("❌ TOGETHER_API_KEY missing.")
             return None
-
         llm = ChatOpenAI(
             base_url="https://api.together.xyz/v1",
             api_key=api_key,
@@ -442,9 +320,7 @@ def get_conversation_chain(vectorstore):
         )
         memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
         return ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=vectorstore.as_retriever(),
-            memory=memory
+            llm=llm, retriever=vectorstore.as_retriever(), memory=memory
         )
     except Exception as e:
         st.error(f"❌ Error initializing chat: {e}")
@@ -466,9 +342,6 @@ def render_landing():
         <h1>⚕️ Medical Report Analyzer</h1>
         <p>AI-powered analysis of your medical reports — summaries, metrics, charts, and risk insights in seconds.</p>
     </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
     <div class="feature-grid">
         <div class="feature-card blue">
             <div class="icon">🤖</div>
@@ -478,12 +351,12 @@ def render_landing():
         <div class="feature-card teal">
             <div class="icon">📊</div>
             <h4>Visual Analytics</h4>
-            <p>Interactive charts showing your health metrics vs. reference ranges</p>
+            <p>Interactive charts showing your metrics vs. reference ranges</p>
         </div>
         <div class="feature-card green">
             <div class="icon">💬</div>
             <h4>Chat with Report</h4>
-            <p>Ask any question about your report and get instant answers</p>
+            <p>Ask any question and get instant answers from your report</p>
         </div>
         <div class="feature-card purple">
             <div class="icon">🔬</div>
@@ -491,11 +364,8 @@ def render_landing():
             <p>ML-powered disease risk scores based on your lab values</p>
         </div>
     </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="background:#161b27; border-radius:16px; padding:1.5rem 2rem;
-                box-shadow:0 2px 16px rgba(0,0,0,0.4); border-left:4px solid #3b82f6;">
+    <div style="background:#161b27;border-radius:16px;padding:1.5rem 2rem;
+                box-shadow:0 2px 16px rgba(0,0,0,0.4);border-left:4px solid #3b82f6;margin-top:0.5rem;">
         <b style="color:#60a5fa;">👈 Get started:</b>
         <span style="color:#94a3b8;"> Upload a PDF medical report in the sidebar, then click
         <b style="color:#e2e8f0;">Process Reports</b> to unlock all features.</span>
@@ -512,15 +382,12 @@ def main():
     )
     inject_css()
 
-    session_keys = [
-        "conversation", "chat_history", "summary", "metrics_df",
-        "risk_assessment", "similar_reports", "pdf_report_bytes"
-    ]
-    for key in session_keys:
+    for key in ["conversation", "chat_history", "summary", "metrics_df",
+                "risk_assessment", "similar_reports", "pdf_report_bytes"]:
         if key not in st.session_state:
             st.session_state[key] = None
 
-    # ── Sidebar ──────────────────────────────────────────────────
+    # ── Sidebar ──────────────────────────────────────────────────────────────
     with st.sidebar:
         st.markdown("""
         <div class="sidebar-brand">
@@ -532,27 +399,21 @@ def main():
 
         st.markdown('<p style="color:#94a3b8;font-size:0.78rem;font-weight:600;letter-spacing:0.8px;margin-bottom:6px;">STEP 1 — UPLOAD</p>', unsafe_allow_html=True)
         pdf_docs = st.file_uploader(
-            "Drop your PDF medical reports here",
-            accept_multiple_files=True,
-            type="pdf",
-            label_visibility="collapsed"
+            "Drop PDFs here", accept_multiple_files=True,
+            type="pdf", label_visibility="collapsed"
         )
         if pdf_docs:
             st.markdown(f'<p style="color:#34d399;font-size:0.82rem;">✓ {len(pdf_docs)} file(s) ready</p>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<p style="color:#94a3b8;font-size:0.78rem;font-weight:600;letter-spacing:0.8px;margin-bottom:6px;">STEP 2 — OPTIONS</p>', unsafe_allow_html=True)
-
         pipeline_type = st.selectbox(
-            "Parsing Pipeline",
-            options=["default", "forms", "structure", "full"],
-            index=3,
-            help="'Full' is recommended — most comprehensive extraction."
+            "Parsing Pipeline", options=["default", "forms", "structure", "full"],
+            index=3, help="'Full' is the most comprehensive and recommended."
         )
         use_deep_learning = st.checkbox(
-            "Enable Deep Learning (slower, more accurate)",
-            value=False,
-            help="Improves accuracy on complex tables. Not recommended on free tier."
+            "Enable Deep Learning (slower, more accurate)", value=False,
+            help="Not recommended on Streamlit free tier."
         )
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -560,7 +421,7 @@ def main():
 
         if st.button("🚀 Process Reports", type="primary"):
             if not pdf_docs:
-                st.error("Please upload at least one PDF file first.")
+                st.error("Please upload at least one PDF first.")
             else:
                 with st.spinner("Analyzing... this may take a minute."):
                     raw_text = get_pdf_text(pdf_docs, pipeline_type, use_deep_learning)
@@ -572,8 +433,8 @@ def main():
                         st.stop()
                     st.session_state.summary = summary
 
-                    summary_path = os.path.join("client", "client-side", "public", "summary.txt")
                     try:
+                        summary_path = os.path.join("client", "client-side", "public", "summary.txt")
                         os.makedirs(os.path.dirname(summary_path), exist_ok=True)
                         with open(summary_path, "w", encoding="utf-8") as f:
                             f.write(str(summary))
@@ -604,9 +465,7 @@ def main():
                     text_embedding = embedding_model.embed_documents([raw_text])[0]
                     st.session_state.similar_reports = comparator.find_similar_reports(text_embedding)
 
-                    pdf_report_bytes = create_clinical_summary_pdf(st.session_state.metrics_df)
-                    st.session_state.pdf_report_bytes = pdf_report_bytes
-
+                    st.session_state.pdf_report_bytes = create_clinical_summary_pdf(st.session_state.metrics_df)
                     st.success("✅ Analysis complete!")
 
         st.markdown("<br><br>", unsafe_allow_html=True)
@@ -618,7 +477,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    # ── Main Content ─────────────────────────────────────────────
+    # ── Main Content ─────────────────────────────────────────────────────────
     if not st.session_state.conversation:
         render_landing()
     else:
@@ -636,78 +495,42 @@ def main():
             "🔬  Advanced Insights"
         ])
 
-        # ── Chat Tab ──
         with tab_chat:
-            st.markdown("""
-            <div class="section-header">
-                <span style="font-size:1.4rem;">💬</span>
-                <h2>Ask Questions About Your Report</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            st.caption("Ask anything about your uploaded report — lab values, diagnoses, recommendations.")
-
+            st.markdown("""<div class="section-header"><span style="font-size:1.4rem;">💬</span><h2>Ask Questions About Your Report</h2></div>""", unsafe_allow_html=True)
+            st.caption("Ask anything — lab values, diagnoses, recommendations.")
             if st.session_state.chat_history:
                 for message in st.session_state.chat_history:
                     role = "user" if isinstance(message, HumanMessage) else "assistant"
                     with st.chat_message(role):
                         st.markdown(message.content)
-
             if user_question := st.chat_input("e.g., What was my hemoglobin level?"):
                 handle_userinput(user_question)
                 st.rerun()
 
-        # ── Summary Tab ──
         with tab_summary:
-            st.markdown("""
-            <div class="section-header">
-                <span style="font-size:1.4rem;">📄</span>
-                <h2>AI-Generated Summary</h2>
-            </div>
-            """, unsafe_allow_html=True)
-
+            st.markdown("""<div class="section-header"><span style="font-size:1.4rem;">📄</span><h2>AI-Generated Summary</h2></div>""", unsafe_allow_html=True)
             if st.session_state.summary:
                 full_summary_string = str(st.session_state.summary)
                 json_metrics = parse_llm_summary(full_summary_string)
-
                 summary_text = full_summary_string
-                json_start_index = full_summary_string.find('[')
-                if json_start_index != -1:
-                    summary_text = full_summary_string[:json_start_index].strip()
-
-                with st.container():
-                    st.markdown(summary_text)
-
-                col1, col2 = st.columns([1, 1])
+                idx = full_summary_string.find('[')
+                if idx != -1:
+                    summary_text = full_summary_string[:idx].strip()
+                st.markdown(summary_text)
+                col1, col2 = st.columns(2)
                 with col1:
-                    st.download_button(
-                        "📥 Download Text Summary",
-                        data=full_summary_string.encode('utf-8'),
-                        file_name="medical_summary.txt",
-                        mime="text/plain"
-                    )
+                    st.download_button("📥 Download Text Summary", data=full_summary_string.encode('utf-8'),
+                                       file_name="medical_summary.txt", mime="text/plain")
                 with col2:
                     download_metrics(json_metrics)
-
                 st.markdown("---")
-                st.markdown("""
-                <div class="section-header">
-                    <span style="font-size:1.4rem;">🧪</span>
-                    <h2>Extracted Health Metrics</h2>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown("""<div class="section-header"><span style="font-size:1.4rem;">🧪</span><h2>Extracted Health Metrics</h2></div>""", unsafe_allow_html=True)
                 st.dataframe(st.session_state.metrics_df, use_container_width=True, hide_index=True)
             else:
                 st.info("No summary available yet.")
 
-        # ── Visuals Tab ──
         with tab_visuals:
-            st.markdown("""
-            <div class="section-header">
-                <span style="font-size:1.4rem;">📊</span>
-                <h2>Visual Analysis</h2>
-            </div>
-            """, unsafe_allow_html=True)
-
+            st.markdown("""<div class="section-header"><span style="font-size:1.4rem;">📊</span><h2>Visual Analysis</h2></div>""", unsafe_allow_html=True)
             if st.session_state.metrics_df is not None and not st.session_state.metrics_df.empty:
                 col1, col2 = st.columns(2)
                 with col1:
@@ -716,52 +539,37 @@ def main():
                 with col2:
                     st.markdown("**Overall Health Score**")
                     generate_radial_health_score(st.session_state.metrics_df)
-
                 st.markdown("---")
                 display_reference_table(st.session_state.metrics_df)
-
                 if st.session_state.pdf_report_bytes:
-                    st.download_button(
-                        "📄 Download Full PDF Report",
-                        data=st.session_state.pdf_report_bytes,
-                        file_name="clinical_summary_report.pdf",
-                        mime="application/pdf"
-                    )
+                    st.download_button("📄 Download Full PDF Report",
+                                       data=st.session_state.pdf_report_bytes,
+                                       file_name="clinical_summary_report.pdf",
+                                       mime="application/pdf")
             else:
                 st.info("No metrics data available — process a report first.")
 
-        # ── Advanced Tab ──
         with tab_advanced:
-            st.markdown("""
-            <div class="section-header">
-                <span style="font-size:1.4rem;">🔬</span>
-                <h2>Advanced Health Insights</h2>
-            </div>
-            """, unsafe_allow_html=True)
-
+            st.markdown("""<div class="section-header"><span style="font-size:1.4rem;">🔬</span><h2>Advanced Health Insights</h2></div>""", unsafe_allow_html=True)
             col_a, col_b = st.columns(2)
-
             with col_a:
                 st.markdown("#### 🩺 Disease Risk Assessment")
-                if st.session_state.risk_assessment:
-                    if 'anemia' in st.session_state.risk_assessment:
-                        risk_info = st.session_state.risk_assessment['anemia']
-                        prob = risk_info['probability']
-                        color = "#ef4444" if prob > 0.7 else ("#f59e0b" if prob > 0.4 else "#10b981")
-                        st.markdown(f"""
-                        <div style="background:white;border-radius:14px;padding:1.2rem;
-                                    box-shadow:0 2px 10px rgba(0,0,0,0.07);
-                                    border-left:4px solid {color};">
-                            <div style="font-size:0.85rem;color:#64748b;font-weight:600;">ANEMIA RISK</div>
-                            <div style="font-size:2rem;font-weight:800;color:{color};">{prob:.0%}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        st.progress(prob)
-                        with st.expander("View Clinical Advice"):
-                            st.markdown(risk_info['advice'])
+                if st.session_state.risk_assessment and 'anemia' in st.session_state.risk_assessment:
+                    risk_info = st.session_state.risk_assessment['anemia']
+                    prob = risk_info['probability']
+                    color = "#ef4444" if prob > 0.7 else ("#f59e0b" if prob > 0.4 else "#10b981")
+                    st.markdown(f"""
+                    <div style="background:#0f172a;border-radius:14px;padding:1.2rem;
+                                box-shadow:0 2px 10px rgba(0,0,0,0.4);border-left:4px solid {color};">
+                        <div style="font-size:0.85rem;color:#64748b;font-weight:600;">ANEMIA RISK</div>
+                        <div style="font-size:2rem;font-weight:800;color:{color};">{prob:.0%}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.progress(prob)
+                    with st.expander("View Clinical Advice"):
+                        st.markdown(risk_info['advice'])
                 else:
                     st.info("No risk data available.")
-
             with col_b:
                 st.markdown("#### 🔍 Similar Reports")
                 if st.session_state.similar_reports:
