@@ -32,6 +32,9 @@ from data_analysis.trends import show_trend_analysis, detect_anomalies
 
 load_dotenv()
 
+TOGETHER_BASE_URL = "https://api.together.xyz/v1"
+TOGETHER_MODEL = "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+
 
 def inject_css():
     st.markdown("""
@@ -273,9 +276,9 @@ def summarize_text(text):
             return None
 
         llm = ChatOpenAI(
-            base_url="https://api.together.xyz/v1",
+            base_url=TOGETHER_BASE_URL,
             api_key=api_key,
-            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+            model=TOGETHER_MODEL,
         )
         summary_prompt = (
             "You are a medical expert assistant. Carefully read and summarize the following medical report in Markdown format. "
@@ -314,9 +317,9 @@ def get_conversation_chain(vectorstore):
             st.error("❌ TOGETHER_API_KEY missing.")
             return None
         llm = ChatOpenAI(
-            base_url="https://api.together.xyz/v1",
+            base_url=TOGETHER_BASE_URL,
             api_key=api_key,
-            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+            model=TOGETHER_MODEL,
         )
         memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
         return ConversationalRetrievalChain.from_llm(
@@ -393,7 +396,7 @@ def main():
         <div class="sidebar-brand">
             <div style="font-size:2.4rem;">⚕️</div>
             <div class="brand-title">MedReport AI</div>
-            <div class="brand-sub">Powered by Mixtral + LangChain</div>
+            <div class="brand-sub">Powered by Llama 3.3 + LangChain</div>
         </div>
         """, unsafe_allow_html=True)
 
