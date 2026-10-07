@@ -12,7 +12,7 @@ libxrandr2
 libxss1
 libxtst6
 libasound2
-libgl1-mesa-glx
+libgl1
 poppler-utils
 default-jdk
 tesseract-ocr
